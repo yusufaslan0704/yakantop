@@ -21,9 +21,38 @@ public class Ball : MonoBehaviour
     private GameObject owner;
     private BallData data;
 
+    private Rigidbody rb;
+    private int remainingBounces;
+    private float curveSign;
+    private Vector3 lastVelocity;
+
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+
+        // Egri top hangi yana kivrilacak? Her atista rastgele.
+        curveSign = Random.value < 0.5f ? -1f : 1f;
+    }
+
     void Start()
     {
         Destroy(gameObject, lifeTime);
+    }
+
+    void FixedUpdate()
+    {
+        if (rb == null || rb.isKinematic) return;
+
+        // Egri top: ucus yonune dik, yatay bir kuvvetle kivrilir.
+        if (data != null && data.curveForce > 0f && rb.linearVelocity.sqrMagnitude > 1f)
+        {
+            Vector3 sideDirection = Vector3.Cross(Vector3.up, rb.linearVelocity.normalized);
+            rb.AddForce(sideDirection * curveSign * data.curveForce, ForceMode.Force);
+        }
+
+        // Sekme hesabi icin carpma ANINDAN onceki hizi sakliyoruz
+        // (OnCollisionEnter'da rb hizi coktan sonmus oluyor).
+        lastVelocity = rb.linearVelocity;
     }
 
     public void SetOwner(GameObject newOwner)
@@ -52,6 +81,7 @@ public class Ball : MonoBehaviour
     public void SetData(BallData newData)
     {
         data = newData;
+        remainingBounces = data != null ? data.maxBounces : 0;
     }
 
     void OnCollisionEnter(Collision collision)
@@ -78,6 +108,15 @@ public class Ball : MonoBehaviour
         if (playerHealth == null)
         {
             ShakeCamera(environmentHitShakeDuration, environmentHitShakeStrength);
+
+            // Sekten top: yok olmak yerine yuzeyden seker.
+            if (remainingBounces > 0 && collision.contacts.Length > 0)
+            {
+                remainingBounces--;
+                Bounce(collision.contacts[0].normal);
+                return;
+            }
+
             Destroy(gameObject);
             return;
         }
@@ -118,6 +157,17 @@ public class Ball : MonoBehaviour
             GameManager.Instance.AddScore(owner);
             GameManager.Instance.DoHitStop(hitStop);
         }
+    }
+
+    void Bounce(Vector3 surfaceNormal)
+    {
+        if (rb == null) return;
+
+        float speedKeep = data != null ? data.bounceSpeedKeep : 0.8f;
+
+        Vector3 reflected = Vector3.Reflect(lastVelocity, surfaceNormal);
+
+        rb.linearVelocity = reflected * speedKeep;
     }
 
     void SpawnHitEffect(Vector3 position)

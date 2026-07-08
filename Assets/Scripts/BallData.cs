@@ -33,4 +33,14 @@ public class BallData : ScriptableObject
     [Header("Sesler (boş bırakılırsa varsayılan çalar)")]
     public AudioClip throwSfx;
     public AudioClip hitSfx;
+
+    [Header("Davranış")]
+    [Tooltip("Duvardan/zeminden kaç kez seker. 0 = ilk çarpmada yok olur.")]
+    public int maxBounces = 0;
+
+    [Tooltip("Her sekmede hızın ne kadarı korunur.")]
+    [Range(0f, 1f)] public float bounceSpeedKeep = 0.8f;
+
+    [Tooltip("Havada yana kıvrılma kuvveti. 0 = düz gider. Yön her atışta rastgele seçilir.")]
+    public float curveForce = 0f;
 }

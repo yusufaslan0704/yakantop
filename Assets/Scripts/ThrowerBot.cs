@@ -23,8 +23,19 @@ public class ThrowerBot : MonoBehaviour
     public bool useAimError = true;
     public float aimErrorRadius = 0.45f;
 
+    [Header("Telegraph (Atış Öncesi Uyarı)")]
+    [Tooltip("Atıştan önce botun kaç saniye 'yanıp sönerek' uyarı vereceği.")]
+    public float telegraphDuration = 0.4f;
+    public Color telegraphColor = new Color(1f, 0.85f, 0.2f);
+    public float telegraphFlashSpeed = 14f;
+
     private PlayerThrow playerThrow;
     private PlayerHealth playerHealth;
+
+    private Renderer botRenderer;
+    private Color botOriginalColor;
+    private bool isTelegraphing;
+    private float telegraphEndTime;
 
     private PlayerHealth runnerHealth;
     private PlayerHealth saverHealth;
@@ -39,6 +50,13 @@ public class ThrowerBot : MonoBehaviour
     {
         playerThrow = GetComponent<PlayerThrow>();
         playerHealth = GetComponent<PlayerHealth>();
+
+        botRenderer = GetComponent<Renderer>();
+
+        if (botRenderer != null)
+        {
+            botOriginalColor = botRenderer.material.color;
+        }
     }
 
     void Start()
@@ -70,11 +88,14 @@ public class ThrowerBot : MonoBehaviour
         // Round bittiyse bot durur.
         if (!GameManager.RoundIsActive)
         {
+            CancelTelegraph(restoreColor: true);
             return;
         }
 
         if (playerHealth != null && playerHealth.IsEliminated)
         {
+            // Rengi geri ALMA: elenme rengi (kirmizi) ustte kalmali.
+            CancelTelegraph(restoreColor: false);
             return;
         }
 
@@ -97,9 +118,52 @@ public class ThrowerBot : MonoBehaviour
 
         UpdateTargetVelocity();
 
-        if (Time.time >= nextThrowTime)
+        if (isTelegraphing)
+        {
+            UpdateTelegraphFlash();
+
+            if (Time.time >= telegraphEndTime)
+            {
+                CancelTelegraph(restoreColor: true);
+                ThrowSelectedBall();
+            }
+        }
+        else if (Time.time >= nextThrowTime)
+        {
+            StartTelegraph();
+        }
+    }
+
+    void StartTelegraph()
+    {
+        if (telegraphDuration <= 0f)
         {
             ThrowSelectedBall();
+            return;
+        }
+
+        isTelegraphing = true;
+        telegraphEndTime = Time.time + telegraphDuration;
+    }
+
+    void UpdateTelegraphFlash()
+    {
+        if (botRenderer == null) return;
+
+        // 0-1 arasi gidip gelen deger ile renk yanip soner.
+        float t = Mathf.PingPong(Time.time * telegraphFlashSpeed, 1f);
+        botRenderer.material.color = Color.Lerp(botOriginalColor, telegraphColor, t);
+    }
+
+    void CancelTelegraph(bool restoreColor)
+    {
+        if (!isTelegraphing) return;
+
+        isTelegraphing = false;
+
+        if (restoreColor && botRenderer != null)
+        {
+            botRenderer.material.color = botOriginalColor;
         }
     }
 
