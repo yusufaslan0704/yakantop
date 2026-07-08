@@ -19,8 +19,8 @@ public class PlayerHealth : MonoBehaviour
     public event System.Action OnEliminated;
     public event System.Action OnRevived;
 
-    private Renderer playerRenderer;
-    private Color originalColor;
+    private Renderer[] renderers;
+    private Color[] originalColors;
 
     private Rigidbody rb;
     private RigidbodyConstraints originalConstraints;
@@ -28,17 +28,60 @@ public class PlayerHealth : MonoBehaviour
 
     void Awake()
     {
-        playerRenderer = GetComponent<Renderer>();
         rb = GetComponent<Rigidbody>();
 
-        if (playerRenderer != null)
-        {
-            originalColor = playerRenderer.material.color;
-        }
+        RefreshRenderers();
 
         if (rb != null)
         {
             originalConstraints = rb.constraints;
+        }
+    }
+
+    // Gorsel model calisma aninda degisebilir (kapsul -> Mixamo modeli).
+    // Renk isleri tum child renderer'lara uygulanir; model degisince yeniden taranir.
+    public void RefreshRenderers()
+    {
+        renderers = GetComponentsInChildren<Renderer>();
+        originalColors = new Color[renderers.Length];
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] != null)
+            {
+                originalColors[i] = renderers[i].material.color;
+            }
+        }
+
+        if (IsEliminated)
+        {
+            SetColor(Color.red);
+        }
+    }
+
+    void SetColor(Color color)
+    {
+        if (renderers == null) return;
+
+        foreach (Renderer r in renderers)
+        {
+            if (r != null)
+            {
+                r.material.color = color;
+            }
+        }
+    }
+
+    void RestoreColors()
+    {
+        if (renderers == null) return;
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] != null)
+            {
+                renderers[i].material.color = originalColors[i];
+            }
         }
     }
 
@@ -56,10 +99,7 @@ public class PlayerHealth : MonoBehaviour
 
         Debug.Log(gameObject.name + " elendi!");
 
-        if (playerRenderer != null)
-        {
-            playerRenderer.material.color = Color.red;
-        }
+        SetColor(Color.red);
 
         // Kinematik cisimlere (örn. TargetDummy) kuvvet uygulanamaz.
         if (rb != null && !rb.isKinematic)
@@ -105,10 +145,7 @@ public class PlayerHealth : MonoBehaviour
             freezeRoutine = null;
         }
 
-        if (playerRenderer != null)
-        {
-            playerRenderer.material.color = originalColor;
-        }
+        RestoreColors();
 
         if (rb != null)
         {

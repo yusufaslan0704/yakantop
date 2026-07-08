@@ -139,6 +139,16 @@ public class CharacterAnimator : MonoBehaviour
         );
     }
 
+    // Gercek 3D model yuklendiginde kapsul gozlerine gerek kalmaz.
+    public void DisableEyes()
+    {
+        if (leftEye != null) Destroy(leftEye.gameObject);
+        if (rightEye != null) Destroy(rightEye.gameObject);
+
+        leftEye = null;
+        rightEye = null;
+    }
+
     void CreateEyes()
     {
         leftEye = CreateEye(new Vector3(-0.17f, 0.5f, 0.42f));

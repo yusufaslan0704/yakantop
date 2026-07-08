@@ -28,8 +28,10 @@ public class ThrowerBot : MonoBehaviour
     private PlayerThrow playerThrow;
     private PlayerHealth playerHealth;
 
-    private Renderer botRenderer;
-    private Color botOriginalColor;
+    // Gorsel model calisma aninda degisebildigi icin renderer'lar
+    // her telegraf basinda yeniden taranir.
+    private Renderer[] telegraphRenderers;
+    private Color[] telegraphOriginalColors;
     private bool isTelegraphing;
     private float telegraphEndTime;
 
@@ -43,13 +45,6 @@ public class ThrowerBot : MonoBehaviour
     {
         playerThrow = GetComponent<PlayerThrow>();
         playerHealth = GetComponent<PlayerHealth>();
-
-        botRenderer = GetComponent<Renderer>();
-
-        if (botRenderer != null)
-        {
-            botOriginalColor = botRenderer.material.color;
-        }
     }
 
     void Start()
@@ -127,15 +122,35 @@ public class ThrowerBot : MonoBehaviour
 
         isTelegraphing = true;
         telegraphEndTime = Time.time + telegraphDuration;
+
+        // Aktif gorsel her ne ise (kapsul veya Mixamo modeli) onu tara.
+        telegraphRenderers = GetComponentsInChildren<Renderer>();
+        telegraphOriginalColors = new Color[telegraphRenderers.Length];
+
+        for (int i = 0; i < telegraphRenderers.Length; i++)
+        {
+            if (telegraphRenderers[i] != null)
+            {
+                telegraphOriginalColors[i] = telegraphRenderers[i].material.color;
+            }
+        }
     }
 
     void UpdateTelegraphFlash()
     {
-        if (botRenderer == null) return;
+        if (telegraphRenderers == null) return;
 
         // 0-1 arasi gidip gelen deger ile renk yanip soner.
         float t = Mathf.PingPong(Time.time * telegraphFlashSpeed, 1f);
-        botRenderer.material.color = Color.Lerp(botOriginalColor, telegraphColor, t);
+
+        for (int i = 0; i < telegraphRenderers.Length; i++)
+        {
+            if (telegraphRenderers[i] != null)
+            {
+                telegraphRenderers[i].material.color =
+                    Color.Lerp(telegraphOriginalColors[i], telegraphColor, t);
+            }
+        }
     }
 
     void CancelTelegraph(bool restoreColor)
@@ -144,9 +159,15 @@ public class ThrowerBot : MonoBehaviour
 
         isTelegraphing = false;
 
-        if (restoreColor && botRenderer != null)
+        if (restoreColor && telegraphRenderers != null)
         {
-            botRenderer.material.color = botOriginalColor;
+            for (int i = 0; i < telegraphRenderers.Length; i++)
+            {
+                if (telegraphRenderers[i] != null)
+                {
+                    telegraphRenderers[i].material.color = telegraphOriginalColors[i];
+                }
+            }
         }
     }
 

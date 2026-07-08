@@ -15,6 +15,9 @@ public class PlayerEmote : MonoBehaviour
     public Color textColor = Color.white;
     public float cooldown = 0.8f;
 
+    // Gorsel katman (orn. dans animasyonu) emote'lari buradan dinler.
+    public event System.Action<int> OnEmotePlayed;
+
     private PlayerInputHandler inputHandler;
     private PlayerHealth playerHealth;
 
@@ -66,6 +69,8 @@ public class PlayerEmote : MonoBehaviour
         if (playerHealth != null && playerHealth.IsEliminated) return;
 
         Show(emotes[index]);
+
+        OnEmotePlayed?.Invoke(index);
     }
 
     void LateUpdate()
