@@ -16,10 +16,6 @@ public class GameManager : MonoBehaviour
     public float roundDuration = 60f;
     public float reviveCountdownDuration = 10f;
 
-    [Header("Players")]
-    public GameObject runnerPlayer;
-    public GameObject saverPlayer;
-
     private float currentTime;
     private float reviveCountdown;
 
@@ -36,11 +32,10 @@ public class GameManager : MonoBehaviour
 
     private Coroutine hitStopRoutine;
 
-    private PlayerHealth runnerHealth;
-    private PlayerHealth saverHealth;
-
-    private Vector3 runnerStartPosition;
-    private Vector3 saverStartPosition;
+    // Oyuncular sahne referansi yerine PlayerManager'dan gelir.
+    // Round reset icin herkesin baslangic pozisyonu saklanir.
+    private readonly Dictionary<PlayerRole, Vector3> startPositions = new Dictionary<PlayerRole, Vector3>();
+    private readonly List<PlayerHealth> subscribedHealths = new List<PlayerHealth>();
 
     void Awake()
     {
@@ -49,27 +44,17 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        if (runnerPlayer != null)
+        foreach (PlayerRole player in PlayerManager.All)
         {
-            runnerHealth = runnerPlayer.GetComponent<PlayerHealth>();
-            runnerStartPosition = runnerPlayer.transform.position;
-        }
+            startPositions[player] = player.transform.position;
 
-        if (saverPlayer != null)
-        {
-            saverHealth = saverPlayer.GetComponent<PlayerHealth>();
-            saverStartPosition = saverPlayer.transform.position;
-        }
+            if (player.Health != null)
+            {
+                player.Health.OnEliminated += HandlePlayerEliminated;
+                player.Health.OnRevived += HandlePlayerRevived;
 
-        if (runnerHealth != null)
-        {
-            runnerHealth.OnEliminated += HandleRunnerEliminated;
-            runnerHealth.OnRevived += HandleRunnerRevived;
-        }
-
-        if (saverHealth != null)
-        {
-            saverHealth.OnEliminated += HandleSaverEliminated;
+                subscribedHealths.Add(player.Health);
+            }
         }
 
         StartRound();
@@ -82,16 +67,16 @@ public class GameManager : MonoBehaviour
             Instance = null;
         }
 
-        if (runnerHealth != null)
+        foreach (PlayerHealth health in subscribedHealths)
         {
-            runnerHealth.OnEliminated -= HandleRunnerEliminated;
-            runnerHealth.OnRevived -= HandleRunnerRevived;
+            if (health != null)
+            {
+                health.OnEliminated -= HandlePlayerEliminated;
+                health.OnRevived -= HandlePlayerRevived;
+            }
         }
 
-        if (saverHealth != null)
-        {
-            saverHealth.OnEliminated -= HandleSaverEliminated;
-        }
+        subscribedHealths.Clear();
     }
 
     void Update()
@@ -127,34 +112,35 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void HandleRunnerEliminated()
+    // Rol tabanli kural: herhangi bir oyuncu elendiginde genel duruma bakilir.
+    // Tum Runner'lar elendiyse geri sayim baslar; Saver'lar da elendiyse oyun biter.
+    void HandlePlayerEliminated()
     {
         if (gameEnded) return;
 
-        // İkisi de elendiyse oyun biter, geri sayıma gerek yok.
-        if (saverHealth != null && saverHealth.IsEliminated)
+        bool anyRunnerAlive = PlayerManager.AnyAlive(RoleType.Runner);
+        bool anySaverAlive = PlayerManager.AnyAlive(RoleType.Saver);
+
+        if (!anyRunnerAlive && !anySaverAlive)
         {
             LoseGame();
             return;
         }
 
-        StartReviveCountdown();
-    }
-
-    void HandleRunnerRevived()
-    {
-        if (gameEnded) return;
-
-        StopReviveCountdown();
-    }
-
-    void HandleSaverEliminated()
-    {
-        if (gameEnded) return;
-
-        if (runnerHealth != null && runnerHealth.IsEliminated)
+        if (!anyRunnerAlive && !reviveCountdownActive)
         {
-            LoseGame();
+            StartReviveCountdown();
+        }
+    }
+
+    void HandlePlayerRevived()
+    {
+        if (gameEnded) return;
+
+        // En az bir Runner hayattaysa geri sayim durur.
+        if (reviveCountdownActive && PlayerManager.AnyAlive(RoleType.Runner))
+        {
+            StopReviveCountdown();
         }
     }
 
@@ -226,14 +212,13 @@ public class GameManager : MonoBehaviour
             Destroy(ball.gameObject);
         }
 
-        if (runnerPlayer != null)
+        // Herkes round basindaki yerine doner.
+        foreach (KeyValuePair<PlayerRole, Vector3> entry in startPositions)
         {
-            runnerPlayer.transform.position = runnerStartPosition;
-        }
-
-        if (saverPlayer != null)
-        {
-            saverPlayer.transform.position = saverStartPosition;
+            if (entry.Key != null)
+            {
+                entry.Key.transform.position = entry.Value;
+            }
         }
 
         StartRound();

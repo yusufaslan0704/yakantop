@@ -2,21 +2,29 @@ using UnityEngine;
 
 public class TeamControlManager : MonoBehaviour
 {
-    [Header("Players")]
-    public GameObject runnerPlayer;
-    public GameObject saverPlayer;
-
     [Header("Camera")]
     public CameraFollow cameraFollow;
     public Transform mainCameraTransform;
 
+    private GameObject runnerPlayer;
+    private GameObject saverPlayer;
     private PlayerHealth runnerHealth;
 
     void Start()
     {
-        if (runnerPlayer != null)
+        // Oyuncular sahne referansi yerine PlayerManager'dan bulunur.
+        PlayerRole runner = PlayerManager.GetFirst(RoleType.Runner);
+        PlayerRole saver = PlayerManager.GetFirst(RoleType.Saver);
+
+        if (runner != null)
         {
-            runnerHealth = runnerPlayer.GetComponent<PlayerHealth>();
+            runnerPlayer = runner.gameObject;
+            runnerHealth = runner.Health;
+        }
+
+        if (saver != null)
+        {
+            saverPlayer = saver.gameObject;
         }
 
         // Runner elendiğinde kontrol Saver'a, kurtarıldığında geri Runner'a geçer.

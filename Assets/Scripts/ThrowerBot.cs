@@ -2,10 +2,6 @@ using UnityEngine;
 
 public class ThrowerBot : MonoBehaviour
 {
-    [Header("Targets")]
-    public Transform runnerTarget;
-    public Transform saverTarget;
-
     [Header("Ball Types")]
     public BallData[] ballTypes;
 
@@ -37,9 +33,6 @@ public class ThrowerBot : MonoBehaviour
     private bool isTelegraphing;
     private float telegraphEndTime;
 
-    private PlayerHealth runnerHealth;
-    private PlayerHealth saverHealth;
-
     private Transform currentTarget;
     private Vector3 lastTargetPosition;
     private Vector3 targetVelocity;
@@ -61,16 +54,6 @@ public class ThrowerBot : MonoBehaviour
 
     void Start()
     {
-        if (runnerTarget != null)
-        {
-            runnerHealth = runnerTarget.GetComponent<PlayerHealth>();
-        }
-
-        if (saverTarget != null)
-        {
-            saverHealth = saverTarget.GetComponent<PlayerHealth>();
-        }
-
         SelectTarget();
 
         if (currentTarget != null)
@@ -202,29 +185,18 @@ public class ThrowerBot : MonoBehaviour
         nextThrowTime = Time.time + finalInterval;
     }
 
+    // Hedefler artik sahne referansi degil: PlayerManager'dan dinamik secilir.
+    // Once hayattaki en yakin Runner, yoksa en yakin Saver.
     void SelectTarget()
     {
-        bool runnerAvailable = runnerTarget != null &&
-                               runnerHealth != null &&
-                               !runnerHealth.IsEliminated;
+        PlayerRole target = PlayerManager.GetClosestAlive(RoleType.Runner, transform.position);
 
-        bool saverAvailable = saverTarget != null &&
-                              saverHealth != null &&
-                              !saverHealth.IsEliminated;
-
-        if (runnerAvailable)
+        if (target == null)
         {
-            currentTarget = runnerTarget;
-            return;
+            target = PlayerManager.GetClosestAlive(RoleType.Saver, transform.position);
         }
 
-        if (saverAvailable)
-        {
-            currentTarget = saverTarget;
-            return;
-        }
-
-        currentTarget = null;
+        currentTarget = target != null ? target.transform : null;
     }
 
     void UpdateTargetVelocity()
