@@ -35,6 +35,13 @@ public class PlayerDash : MonoBehaviour
 
     void Update()
     {
+        // Round bittiyse dash atılamaz.
+        if (!GameManager.RoundIsActive)
+        {
+            StopDash();
+            return;
+        }
+
         // Elenen oyuncu dash atamaz.
         if (playerHealth != null && playerHealth.IsEliminated)
         {

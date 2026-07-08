@@ -28,6 +28,12 @@ public class PlayerMovement : MonoBehaviour
 		// Input'u Update'te okuyoruz, fiziksel hareketi FixedUpdate'te uyguluyoruz.
 		moveDirection = Vector3.zero;
 
+		// Round bittiyse kimse hareket edemez.
+		if (!GameManager.RoundIsActive)
+		{
+			return;
+		}
+
 		if (playerHealth != null && playerHealth.IsEliminated)
 		{
 			return;

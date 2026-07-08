@@ -100,8 +100,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 3637294896099317143}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e108323a5d7d89b41b8cd4c3e7b5d9bb, type: 3}
+  m_Script: {fileID: 11500000, guid: a5149d660a5eedf4ca3240b67612fadf, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ImpactEffect
+  m_EditorClassIdentifier: Assembly-CSharp::VFXAutoDestroy
   lifeTime: 0.25
   growSpeed: 7

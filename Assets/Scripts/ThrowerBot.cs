@@ -6,30 +6,13 @@ public class ThrowerBot : MonoBehaviour
     public Transform runnerTarget;
     public Transform saverTarget;
 
-    [Header("Ball Prefabs")]
-    public GameObject normalBallPrefab;
-    public GameObject fastBallPrefab;
-    public GameObject heavyBallPrefab;
+    [Header("Ball Types")]
+    public BallData[] ballTypes;
 
     [Header("Throw Settings")]
     public float baseThrowInterval = 2.5f;
     public float throwIntervalRandomOffset = 0.35f;
     public float aimHeightOffset = 1.0f;
-
-    [Header("Ball Forces")]
-    public float normalBallForce = 28f;
-    public float fastBallForce = 40f;
-    public float heavyBallForce = 22f;
-
-    [Header("Ball Cooldown Multipliers")]
-    public float normalCooldownMultiplier = 1.0f;
-    public float fastCooldownMultiplier = 1.2f;
-    public float heavyCooldownMultiplier = 1.45f;
-
-    [Header("Ball Chances")]
-    [Range(0f, 100f)] public float normalBallChance = 60f;
-    [Range(0f, 100f)] public float fastBallChance = 25f;
-    [Range(0f, 100f)] public float heavyBallChance = 15f;
 
     [Header("Prediction Aim")]
     public bool usePrediction = true;
@@ -84,6 +67,12 @@ public class ThrowerBot : MonoBehaviour
     {
         if (playerThrow == null) return;
 
+        // Round bittiyse bot durur.
+        if (!GameManager.RoundIsActive)
+        {
+            return;
+        }
+
         if (playerHealth != null && playerHealth.IsEliminated)
         {
             return;
@@ -116,26 +105,22 @@ public class ThrowerBot : MonoBehaviour
 
     void ThrowSelectedBall()
     {
-        Vector3 aimPoint = GetAimPoint();
+        BallData selectedBall = ChooseBallData();
 
-        GameObject selectedBallPrefab = ChooseBallPrefab(
-            out float selectedForce,
-            out float selectedCooldownMultiplier,
-            out string selectedBallName
-        );
-
-        if (selectedBallPrefab == null)
+        if (selectedBall == null || selectedBall.prefab == null)
         {
-            Debug.LogWarning("Bot top atamadı. Seçilen top prefab boş: " + selectedBallName);
+            Debug.LogWarning("Bot top atamadı. Ball Types listesi boş veya prefab eksik.");
             ScheduleNextThrow(1f);
             return;
         }
 
-        playerThrow.BotThrowAt(aimPoint, selectedForce, selectedBallPrefab);
+        Vector3 aimPoint = GetAimPoint();
 
-        Debug.Log("Bot top attı: " + selectedBallName);
+        playerThrow.BotThrowAt(aimPoint, selectedBall.throwForce, selectedBall.prefab);
 
-        ScheduleNextThrow(selectedCooldownMultiplier);
+        Debug.Log("Bot top attı: " + selectedBall.ballName);
+
+        ScheduleNextThrow(selectedBall.cooldownMultiplier);
     }
 
     void ScheduleNextThrow(float cooldownMultiplier)
@@ -209,43 +194,44 @@ public class ThrowerBot : MonoBehaviour
         return baseAimPoint;
     }
 
-    GameObject ChooseBallPrefab(
-        out float selectedForce,
-        out float selectedCooldownMultiplier,
-        out string selectedBallName
-    )
+    // Şans değerlerine göre ağırlıklı rastgele top seçimi.
+    BallData ChooseBallData()
     {
-        float totalChance = normalBallChance + fastBallChance + heavyBallChance;
+        if (ballTypes == null || ballTypes.Length == 0)
+        {
+            return null;
+        }
+
+        float totalChance = 0f;
+
+        foreach (BallData ball in ballTypes)
+        {
+            if (ball != null)
+            {
+                totalChance += ball.chance;
+            }
+        }
 
         if (totalChance <= 0f)
         {
-            selectedForce = normalBallForce;
-            selectedCooldownMultiplier = normalCooldownMultiplier;
-            selectedBallName = "Normal Ball";
-            return normalBallPrefab;
+            return ballTypes[0];
         }
 
         float randomValue = Random.Range(0f, totalChance);
+        float cumulative = 0f;
 
-        if (randomValue <= normalBallChance)
+        foreach (BallData ball in ballTypes)
         {
-            selectedForce = normalBallForce;
-            selectedCooldownMultiplier = normalCooldownMultiplier;
-            selectedBallName = "Normal Ball";
-            return normalBallPrefab;
+            if (ball == null) continue;
+
+            cumulative += ball.chance;
+
+            if (randomValue <= cumulative)
+            {
+                return ball;
+            }
         }
 
-        if (randomValue <= normalBallChance + fastBallChance)
-        {
-            selectedForce = fastBallForce;
-            selectedCooldownMultiplier = fastCooldownMultiplier;
-            selectedBallName = "Fast Ball";
-            return fastBallPrefab;
-        }
-
-        selectedForce = heavyBallForce;
-        selectedCooldownMultiplier = heavyCooldownMultiplier;
-        selectedBallName = "Heavy Ball";
-        return heavyBallPrefab;
+        return ballTypes[ballTypes.Length - 1];
     }
 }

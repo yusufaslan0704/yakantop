@@ -33,6 +33,13 @@ public class PlayerThrow : MonoBehaviour
 
     void Update()
     {
+        // Round bittiyse atış yapılamaz.
+        if (!GameManager.RoundIsActive)
+        {
+            isCharging = false;
+            return;
+        }
+
         // Elenen oyuncu top atamaz.
         if (playerHealth != null && playerHealth.IsEliminated)
         {
@@ -137,6 +144,12 @@ public class PlayerThrow : MonoBehaviour
 
     public void BotThrowAt(Vector3 targetPosition, float force, GameObject customBallPrefab)
     {
+        // Round bittiyse bot da atış yapamaz.
+        if (!GameManager.RoundIsActive)
+        {
+            return;
+        }
+
         // Elenen bot top atamaz.
         if (playerHealth != null && playerHealth.IsEliminated)
         {

@@ -36,6 +36,13 @@ public class PlayerRevive : MonoBehaviour
 
     void Update()
     {
+        // Round bittiyse revive yapılamaz.
+        if (!GameManager.RoundIsActive)
+        {
+            ResetReviveProgress();
+            return;
+        }
+
         // Elenen oyuncu revive yapamaz.
         if (playerHealth != null && playerHealth.IsEliminated)
         {

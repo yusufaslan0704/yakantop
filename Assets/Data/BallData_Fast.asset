@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3612aeb2a30479494ee2498b272c68c, type: 3}
+  m_Name: BallData_Fast
+  m_EditorClassIdentifier: 
+  ballName: Fast Ball
+  prefab: {fileID: 289847871389453925, guid: c98cced442712d240a614a4ab03f2644, type: 3}
+  throwForce: 36
+  cooldownMultiplier: 1.2
+  chance: 33.3

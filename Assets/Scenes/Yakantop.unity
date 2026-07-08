@@ -2489,20 +2489,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ThrowerBot
   runnerTarget: {fileID: 892651418}
   saverTarget: {fileID: 1459117607}
-  normalBallPrefab: {fileID: 289847871389453925, guid: 317d62b2134d8084c91ff8f5f82db085, type: 3}
-  fastBallPrefab: {fileID: 289847871389453925, guid: c98cced442712d240a614a4ab03f2644, type: 3}
-  heavyBallPrefab: {fileID: 289847871389453925, guid: a7c545d83cf9a4c40ae4462facd20e0b, type: 3}
-  throwInterval: 2.5
+  ballTypes:
+  - {fileID: 11400000, guid: 19eae1ddcdc24c11b037a94e2d98fe66, type: 2}
+  - {fileID: 11400000, guid: e8e1447e0d9a47769f3dfa9dbbf7047f, type: 2}
+  - {fileID: 11400000, guid: dd708dd10fcb4ae9af89ac7f7e5a5865, type: 2}
+  baseThrowInterval: 2.5
+  throwIntervalRandomOffset: 0.35
   aimHeightOffset: 1
-  normalBallForce: 28
-  fastBallForce: 36
-  heavyBallForce: 22
-  normalBallChance: 33.3
-  fastBallChance: 33.3
-  heavyBallChance: 33.3
   usePrediction: 1
   predictionTime: 0.45
   maxPredictionDistance: 3.5
+  useAimError: 1
+  aimErrorRadius: 0.45
 --- !u!1 &1061365165
 GameObject:
   m_ObjectHideFlags: 0

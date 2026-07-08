@@ -2,6 +2,14 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance { get; private set; }
+
+    // Diğer scriptler "oyun oynanabilir durumda mı?" sorusunu buradan sorar.
+    public static bool RoundIsActive
+    {
+        get { return Instance == null || Instance.roundActive; }
+    }
+
     [Header("Round Settings")]
     public float roundDuration = 60f;
     public float reviveCountdownDuration = 10f;
@@ -25,6 +33,11 @@ public class GameManager : MonoBehaviour
 
     private Vector3 runnerStartPosition;
     private Vector3 saverStartPosition;
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
@@ -56,6 +69,11 @@ public class GameManager : MonoBehaviour
 
     void OnDestroy()
     {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+
         if (runnerHealth != null)
         {
             runnerHealth.OnEliminated -= HandleRunnerEliminated;
@@ -134,8 +152,6 @@ public class GameManager : MonoBehaviour
 
     void StartRound()
     {
-        Time.timeScale = 1f;
-
         currentTime = roundDuration;
         reviveCountdown = reviveCountdownDuration;
 
@@ -172,7 +188,6 @@ public class GameManager : MonoBehaviour
         playerWon = true;
 
         Debug.Log("Kazandın!");
-        Time.timeScale = 0f;
     }
 
     void LoseGame()
@@ -182,18 +197,23 @@ public class GameManager : MonoBehaviour
         playerWon = false;
 
         Debug.Log("Kaybettin!");
-        Time.timeScale = 0f;
     }
 
     void ResetRound()
     {
-        Time.timeScale = 1f;
-
         PlayerHealth[] players = FindObjectsByType<PlayerHealth>(FindObjectsSortMode.None);
 
         foreach (PlayerHealth player in players)
         {
             player.Revive();
+        }
+
+        // Havada kalan toplar yeni round'a taşınmasın.
+        Ball[] balls = FindObjectsByType<Ball>(FindObjectsSortMode.None);
+
+        foreach (Ball ball in balls)
+        {
+            Destroy(ball.gameObject);
         }
 
         if (runnerPlayer != null)

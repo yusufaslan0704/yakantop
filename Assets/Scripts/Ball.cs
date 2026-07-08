@@ -19,12 +19,9 @@ public class Ball : MonoBehaviour
     public float knockbackForce = 4f;
 
     private GameObject owner;
-    private GameManager gameManager;
 
     void Start()
     {
-        gameManager = FindFirstObjectByType<GameManager>();
-
         Destroy(gameObject, lifeTime);
     }
 
@@ -52,7 +49,7 @@ public class Ball : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        // Topu atan ki?iye çarparsa hiçbir ?ey yapma.
+        // Topu atan kisiye carparsa hicbir sey yapma.
         if (owner != null && collision.gameObject.transform.root == owner.transform.root)
         {
             return;
@@ -70,7 +67,7 @@ public class Ball : MonoBehaviour
 
         PlayerHealth playerHealth = collision.gameObject.GetComponentInParent<PlayerHealth>();
 
-        // Top yere, duvara veya oyuncu olmayan objeye çarpt?ysa.
+        // Top yere, duvara veya oyuncu olmayan objeye carptiysa.
         if (playerHealth == null)
         {
             ShakeCamera(environmentHitShakeDuration, environmentHitShakeStrength);
@@ -78,8 +75,8 @@ public class Ball : MonoBehaviour
             return;
         }
 
-        // Oyuncu zaten elenmi?se tekrar vurma, skor verme.
-        if (playerHealth.IsEliminated)
+        // Oyuncu zaten elenmisse veya round bittiyse tekrar vurma, skor verme.
+        if (playerHealth.IsEliminated || !GameManager.RoundIsActive)
         {
             ShakeCamera(environmentHitShakeDuration, environmentHitShakeStrength);
             Destroy(gameObject);
@@ -92,9 +89,9 @@ public class Ball : MonoBehaviour
 
         playerHealth.Eliminate();
 
-        if (gameManager != null)
+        if (GameManager.Instance != null)
         {
-            gameManager.AddScore(1);
+            GameManager.Instance.AddScore(1);
         }
 
         Destroy(gameObject);
