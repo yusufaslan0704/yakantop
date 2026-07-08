@@ -93,6 +93,10 @@ public class CharacterModelVisual : MonoBehaviour
             return;
         }
 
+        // Modeli eklemeden ONCE var olan tum gorselleri topla:
+        // kapsul govdesi, yon gosterge kupu (DirectionMarker) vb.
+        MeshRenderer[] oldRenderers = GetComponentsInChildren<MeshRenderer>();
+
         GameObject instance = Instantiate(modelPrefab, transform);
 
         instance.name = "CharacterModel";
@@ -110,7 +114,7 @@ public class CharacterModelVisual : MonoBehaviour
         // Hareket fizik tarafindan yonetiliyor; animasyon karakteri kaydirmasin.
         animator.applyRootMotion = false;
 
-        HideCapsuleVisual();
+        HideOldVisuals(oldRenderers);
         BuildGraph(animator);
 
         // Kapsul gozleri artik gereksiz; squash & stretch ise modelde de calisir.
@@ -128,13 +132,14 @@ public class CharacterModelVisual : MonoBehaviour
         }
     }
 
-    void HideCapsuleVisual()
+    void HideOldVisuals(MeshRenderer[] oldRenderers)
     {
-        MeshRenderer capsuleRenderer = GetComponent<MeshRenderer>();
-
-        if (capsuleRenderer != null)
+        foreach (MeshRenderer renderer in oldRenderers)
         {
-            capsuleRenderer.enabled = false;
+            if (renderer != null)
+            {
+                renderer.enabled = false;
+            }
         }
     }
 
