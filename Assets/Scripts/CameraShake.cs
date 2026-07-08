@@ -15,6 +15,13 @@ public class CameraShake : MonoBehaviour
 
     void Awake()
     {
+        // Sahnede yanlışlıkla ikinci bir CameraShake varsa sessizce ezmesin.
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning("Sahnede birden fazla CameraShake var! Fazlalık yok sayılıyor: " + gameObject.name);
+            return;
+        }
+
         Instance = this;
     }
 
