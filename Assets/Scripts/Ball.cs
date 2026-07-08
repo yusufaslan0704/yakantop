@@ -8,17 +8,18 @@ public class Ball : MonoBehaviour
     [Header("Effects")]
     public GameObject hitEffectPrefab;
 
-    [Header("Camera Shake")]
+    [Header("Environment Hit")]
     public float environmentHitShakeDuration = 0.08f;
     public float environmentHitShakeStrength = 0.07f;
+
+    [Header("Player Hit (BallData yoksa kullanilir)")]
     public float playerHitShakeDuration = 0.16f;
     public float playerHitShakeStrength = 0.22f;
-
-    [Header("Knockback")]
-    public bool useKnockback = true;
     public float knockbackForce = 4f;
+    public float hitStopDuration = 0.05f;
 
     private GameObject owner;
+    private BallData data;
 
     void Start()
     {
@@ -45,6 +46,12 @@ public class Ball : MonoBehaviour
                 Physics.IgnoreCollision(ballCollider, ownerCollider, true);
             }
         }
+    }
+
+    // Topun his degerleri (shake, knockback, ses...) BallData'dan gelir.
+    public void SetData(BallData newData)
+    {
+        data = newData;
     }
 
     void OnCollisionEnter(Collision collision)
@@ -83,18 +90,34 @@ public class Ball : MonoBehaviour
             return;
         }
 
-        ShakeCamera(playerHitShakeDuration, playerHitShakeStrength);
+        HitPlayer(playerHealth);
 
-        ApplyKnockback(collision);
+        Destroy(gameObject);
+    }
 
-        playerHealth.Eliminate();
+    void HitPlayer(PlayerHealth playerHealth)
+    {
+        float shakeDuration = data != null ? data.hitShakeDuration : playerHitShakeDuration;
+        float shakeStrength = data != null ? data.hitShakeStrength : playerHitShakeStrength;
+        float knockback = data != null ? data.knockbackForce : knockbackForce;
+        float hitStop = data != null ? data.hitStopDuration : hitStopDuration;
+
+        ShakeCamera(shakeDuration, shakeStrength);
+
+        // Savrulma yonu: toptan oyuncuya dogru, yatay duzlemde.
+        Vector3 knockbackDirection = playerHealth.transform.position - transform.position;
+        knockbackDirection.y = 0f;
+        knockbackDirection.Normalize();
+
+        // Savrulmayi Eliminate'e veriyoruz ki elenme animasyonuyla birlikte islensin.
+        playerHealth.Eliminate(knockbackDirection * knockback);
 
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.AddScore(1);
+            // Skor, topu atan oyuncuya yazilir.
+            GameManager.Instance.AddScore(owner);
+            GameManager.Instance.DoHitStop(hitStop);
         }
-
-        Destroy(gameObject);
     }
 
     void SpawnHitEffect(Vector3 position)
@@ -114,7 +137,15 @@ public class Ball : MonoBehaviour
             return;
         }
 
-        AudioManager.Instance.PlayHit();
+        // Topun kendi carpma sesi varsa onu cal, yoksa varsayilani.
+        if (data != null && data.hitSfx != null)
+        {
+            AudioManager.Instance.PlayClip(data.hitSfx, AudioManager.Instance.hitVolume);
+        }
+        else
+        {
+            AudioManager.Instance.PlayHit();
+        }
     }
 
     void ShakeCamera(float duration, float strength)
@@ -125,26 +156,5 @@ public class Ball : MonoBehaviour
         }
 
         CameraShake.Instance.Shake(duration, strength);
-    }
-
-    void ApplyKnockback(Collision collision)
-    {
-        if (!useKnockback)
-        {
-            return;
-        }
-
-        Rigidbody hitRigidbody = collision.gameObject.GetComponentInParent<Rigidbody>();
-
-        if (hitRigidbody == null)
-        {
-            return;
-        }
-
-        Vector3 knockbackDirection = collision.transform.position - transform.position;
-        knockbackDirection.y = 0f;
-        knockbackDirection.Normalize();
-
-        hitRigidbody.AddForce(knockbackDirection * knockbackForce, ForceMode.Impulse);
     }
 }

@@ -74,6 +74,12 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
+        // Elenmiş oyuncunun savrulmasına karışma (fizik yönetiyor).
+        if (playerHealth != null && playerHealth.IsEliminated)
+        {
+            return;
+        }
+
         // Dash sırasında hızı PlayerDash yönetiyor.
         if (playerDash != null && playerDash.IsDashing())
         {
@@ -101,6 +107,12 @@ public class PlayerMovement : MonoBehaviour
     {
         // Kontrol başka karaktere geçtiğinde bu karakter kayarak gitmesin.
         moveDirection = Vector3.zero;
+
+        // Elenme savrulması sürüyorsa hıza dokunma.
+        if (playerHealth != null && playerHealth.IsEliminated)
+        {
+            return;
+        }
 
         if (rb != null && !rb.isKinematic)
         {

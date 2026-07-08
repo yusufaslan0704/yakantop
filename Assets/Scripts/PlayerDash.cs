@@ -116,6 +116,12 @@ public class PlayerDash : MonoBehaviour
 
         isDashing = false;
 
+        // Elenme savrulması sürüyorsa hıza dokunma.
+        if (playerHealth != null && playerHealth.IsEliminated)
+        {
+            return;
+        }
+
         // Dash bitince kalan hızı sıfırla ki karakter kaymaya devam etmesin.
         if (rb != null && !rb.isKinematic)
         {

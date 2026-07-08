@@ -17,3 +17,9 @@ MonoBehaviour:
   throwForce: 22
   cooldownMultiplier: 1.45
   chance: 33.3
+  hitShakeDuration: 0.35
+  hitShakeStrength: 0.5
+  knockbackForce: 11
+  hitStopDuration: 0.1
+  throwSfx: {fileID: 0}
+  hitSfx: {fileID: 0}

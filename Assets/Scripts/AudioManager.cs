@@ -19,6 +19,10 @@ public class AudioManager : MonoBehaviour
     [Range(0f, 1f)] public float dashVolume = 0.7f;
     [Range(0f, 1f)] public float reviveVolume = 0.9f;
 
+    [Header("Variation")]
+    [Tooltip("Her ses biraz farklı tonda çalar, tekrar hissini kırar. 0 = kapalı.")]
+    [Range(0f, 0.3f)] public float pitchVariation = 0.08f;
+
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -55,10 +59,18 @@ public class AudioManager : MonoBehaviour
         PlaySfx(reviveSfx, reviveVolume);
     }
 
+    // Top tipine özel sesler gibi dışarıdan gelen klipler için.
+    public void PlayClip(AudioClip clip, float volume)
+    {
+        PlaySfx(clip, volume);
+    }
+
     void PlaySfx(AudioClip clip, float volume)
     {
         if (audioSource == null) return;
         if (clip == null) return;
+
+        audioSource.pitch = Random.Range(1f - pitchVariation, 1f + pitchVariation);
 
         audioSource.PlayOneShot(clip, volume);
     }

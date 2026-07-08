@@ -116,9 +116,7 @@ public class ThrowerBot : MonoBehaviour
 
         Vector3 aimPoint = GetAimPoint();
 
-        playerThrow.BotThrowAt(aimPoint, selectedBall.throwForce, selectedBall.prefab);
-
-        Debug.Log("Bot top attı: " + selectedBall.ballName);
+        playerThrow.BotThrowAt(aimPoint, selectedBall);
 
         ScheduleNextThrow(selectedBall.cooldownMultiplier);
     }

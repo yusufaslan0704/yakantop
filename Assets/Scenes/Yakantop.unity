@@ -1979,7 +1979,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8585b8eb81e9da41a4b17fd30947aa5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerThrow
-  ballPrefab: {fileID: 289847871389453925, guid: 317d62b2134d8084c91ff8f5f82db085, type: 3}
+  ballData: {fileID: 11400000, guid: 19eae1ddcdc24c11b037a94e2d98fe66, type: 2}
   throwPoint: {fileID: 348203342}
   playerCamera: {fileID: 330585545}
   aimDistance: 100
@@ -2328,7 +2328,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8585b8eb81e9da41a4b17fd30947aa5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerThrow
-  ballPrefab: {fileID: 289847871389453925, guid: 317d62b2134d8084c91ff8f5f82db085, type: 3}
+  ballData: {fileID: 11400000, guid: 19eae1ddcdc24c11b037a94e2d98fe66, type: 2}
   throwPoint: {fileID: 778016862}
   playerCamera: {fileID: 330585545}
   aimDistance: 100
@@ -3334,7 +3334,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8585b8eb81e9da41a4b17fd30947aa5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerThrow
-  ballPrefab: {fileID: 289847871389453925, guid: 317d62b2134d8084c91ff8f5f82db085, type: 3}
+  ballData: {fileID: 11400000, guid: 19eae1ddcdc24c11b037a94e2d98fe66, type: 2}
   throwPoint: {fileID: 410216292}
   playerCamera: {fileID: 330585545}
   aimDistance: 100

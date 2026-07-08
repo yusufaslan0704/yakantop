@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -27,6 +29,12 @@ public class GameManager : MonoBehaviour
     private bool reviveCountdownActive = false;
 
     private int score = 0;
+
+    // Skor aidiyeti: hangi oyuncu kac eleme yapti.
+    // Multiplayer'da "kim kimi vurdu" tablosunun temeli.
+    private readonly Dictionary<GameObject, int> scoreByPlayer = new Dictionary<GameObject, int>();
+
+    private Coroutine hitStopRoutine;
 
     private PlayerHealth runnerHealth;
     private PlayerHealth saverHealth;
@@ -156,6 +164,8 @@ public class GameManager : MonoBehaviour
         reviveCountdown = reviveCountdownDuration;
 
         score = 0;
+        scoreByPlayer.Clear();
+
         roundActive = true;
         gameEnded = false;
         playerWon = false;
@@ -231,16 +241,63 @@ public class GameManager : MonoBehaviour
         Debug.Log("Round resetlendi!");
     }
 
-    public void AddScore(int amount)
+    // Skor, elemeyi yapan oyuncuya (topu atana) yazılır.
+    public void AddScore(GameObject scorer, int amount = 1)
     {
         if (gameEnded) return;
 
         score += amount;
+
+        if (scorer != null)
+        {
+            scoreByPlayer.TryGetValue(scorer, out int current);
+            scoreByPlayer[scorer] = current + amount;
+
+            Debug.Log(scorer.name + " eleme yaptı! Toplam: " + scoreByPlayer[scorer]);
+        }
     }
 
     public int GetScore()
     {
         return score;
+    }
+
+    public int GetScoreOf(GameObject player)
+    {
+        if (player == null) return 0;
+
+        scoreByPlayer.TryGetValue(player, out int value);
+        return value;
+    }
+
+    // Çarpma anında oyunu kısacık dondurur ("vuruş oturdu" hissi).
+    public void DoHitStop(float duration)
+    {
+        if (duration <= 0f) return;
+
+        if (hitStopRoutine != null)
+        {
+            StopCoroutine(hitStopRoutine);
+            Time.timeScale = 1f;
+        }
+
+        hitStopRoutine = StartCoroutine(HitStopRoutine(duration));
+    }
+
+    IEnumerator HitStopRoutine(float duration)
+    {
+        Time.timeScale = 0.05f;
+
+        yield return new WaitForSecondsRealtime(duration);
+
+        Time.timeScale = 1f;
+        hitStopRoutine = null;
+    }
+
+    void OnDisable()
+    {
+        // Hit-stop ortasında oyun kapanırsa zaman donuk kalmasın.
+        Time.timeScale = 1f;
     }
 
     public bool IsRoundActive()

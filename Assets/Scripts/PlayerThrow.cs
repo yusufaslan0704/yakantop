@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerThrow : MonoBehaviour
 {
     [Header("Ball Settings")]
-    public GameObject ballPrefab;
+    public BallData ballData;
     public Transform throwPoint;
 
     [Header("Aim Settings")]
@@ -77,8 +77,6 @@ public class PlayerThrow : MonoBehaviour
     {
         isCharging = true;
         chargeStartTime = Time.time;
-
-        Debug.Log("Atış hazırlanıyor...");
     }
 
     void ReleaseThrow()
@@ -93,15 +91,13 @@ public class PlayerThrow : MonoBehaviour
         ThrowBall(finalForce);
 
         nextThrowTime = Time.time + cooldown;
-
-        Debug.Log("Top atıldı! Güç: " + finalForce.ToString("F1"));
     }
 
     void ThrowBall(float force)
     {
-        if (ballPrefab == null)
+        if (ballData == null || ballData.prefab == null)
         {
-            Debug.LogWarning("Ball prefab atanmadı!");
+            Debug.LogWarning("Ball Data atanmadı veya prefab eksik!");
             return;
         }
 
@@ -132,17 +128,13 @@ public class PlayerThrow : MonoBehaviour
 
         Vector3 throwDirection = (targetPoint - throwPoint.position).normalized;
 
-        SpawnAndThrowBall(ballPrefab, throwDirection, force);
+        SpawnAndThrowBall(ballData, throwDirection, force);
 
         RotatePlayerToThrowDirection(throwDirection);
     }
 
-    public void BotThrowAt(Vector3 targetPosition, float force)
-    {
-        BotThrowAt(targetPosition, force, ballPrefab);
-    }
-
-    public void BotThrowAt(Vector3 targetPosition, float force, GameObject customBallPrefab)
+    // Bot atışı: atış gücü ve top tipi BallData'dan gelir.
+    public void BotThrowAt(Vector3 targetPosition, BallData botBallData)
     {
         // Round bittiyse bot da atış yapamaz.
         if (!GameManager.RoundIsActive)
@@ -168,9 +160,9 @@ public class PlayerThrow : MonoBehaviour
             return;
         }
 
-        if (customBallPrefab == null)
+        if (botBallData == null || botBallData.prefab == null)
         {
-            Debug.LogWarning("Bot atışı için top prefab eksik!");
+            Debug.LogWarning("Bot atışı için Ball Data eksik!");
             return;
         }
 
@@ -182,29 +174,28 @@ public class PlayerThrow : MonoBehaviour
 
         Vector3 throwDirection = (targetPosition - throwPoint.position).normalized;
 
-        SpawnAndThrowBall(customBallPrefab, throwDirection, force);
+        SpawnAndThrowBall(botBallData, throwDirection, botBallData.throwForce);
 
         RotatePlayerToThrowDirection(throwDirection);
 
         nextThrowTime = Time.time + cooldown;
-
-        Debug.Log(gameObject.name + " bot olarak top attı.");
     }
 
-    void SpawnAndThrowBall(GameObject prefabToSpawn, Vector3 throwDirection, float force)
+    void SpawnAndThrowBall(BallData dataToThrow, Vector3 throwDirection, float force)
     {
         // Topu karakterin gövdesinin içinde değil, biraz önünde oluşturuyoruz.
         Vector3 spawnPosition = throwPoint.position + throwDirection * 0.6f;
 
-        GameObject ball = Instantiate(prefabToSpawn, spawnPosition, Quaternion.identity);
+        GameObject ball = Instantiate(dataToThrow.prefab, spawnPosition, Quaternion.identity);
 
         // Topa atan kişiyi owner olarak veriyoruz.
-        // Böylece top, atan kişiye çarpınca onu elemez.
+        // Böylece top, atan kişiye çarpınca onu elemez ve skor atana yazılır.
         Ball ballScript = ball.GetComponent<Ball>();
 
         if (ballScript != null)
         {
             ballScript.SetOwner(gameObject);
+            ballScript.SetData(dataToThrow);
         }
 
         Rigidbody ballRb = ball.GetComponent<Rigidbody>();
@@ -216,8 +207,22 @@ public class PlayerThrow : MonoBehaviour
             ballRb.AddForce(throwDirection * force, ForceMode.Impulse);
         }
 
-        // Top atma sesi.
-        if (AudioManager.Instance != null)
+        PlayThrowSound(dataToThrow);
+    }
+
+    void PlayThrowSound(BallData dataToThrow)
+    {
+        if (AudioManager.Instance == null)
+        {
+            return;
+        }
+
+        // Topun kendi atış sesi varsa onu çal (örn. Fast Ball whoosh), yoksa varsayılanı.
+        if (dataToThrow != null && dataToThrow.throwSfx != null)
+        {
+            AudioManager.Instance.PlayClip(dataToThrow.throwSfx, AudioManager.Instance.throwVolume);
+        }
+        else
         {
             AudioManager.Instance.PlayThrow();
         }

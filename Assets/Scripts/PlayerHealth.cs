@@ -1,7 +1,18 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
 {
+    [Header("Elenme Savrulması")]
+    [Tooltip("Savrulmaya eklenen yukarı itiş.")]
+    public float flingUpForce = 2.5f;
+
+    [Tooltip("Devrilme dönüşü gücü.")]
+    public float flingTorque = 6f;
+
+    [Tooltip("Savrulduktan kaç saniye sonra yerde donup kalır.")]
+    public float freezeDelay = 1.2f;
+
     public bool IsEliminated { get; private set; }
 
     // Diğer scriptler her kare durum kontrol etmek yerine bu olaylara abone olur.
@@ -12,6 +23,8 @@ public class PlayerHealth : MonoBehaviour
     private Color originalColor;
 
     private Rigidbody rb;
+    private RigidbodyConstraints originalConstraints;
+    private Coroutine freezeRoutine;
 
     void Awake()
     {
@@ -22,9 +35,20 @@ public class PlayerHealth : MonoBehaviour
         {
             originalColor = playerRenderer.material.color;
         }
+
+        if (rb != null)
+        {
+            originalConstraints = rb.constraints;
+        }
     }
 
     public void Eliminate()
+    {
+        Eliminate(Vector3.zero);
+    }
+
+    // knockbackImpulse: topun çarpma yönü ve gücü (BallData'dan gelir).
+    public void Eliminate(Vector3 knockbackImpulse)
     {
         if (IsEliminated) return;
 
@@ -37,6 +61,26 @@ public class PlayerHealth : MonoBehaviour
             playerRenderer.material.color = Color.red;
         }
 
+        // Kinematik cisimlere (örn. TargetDummy) kuvvet uygulanamaz.
+        if (rb != null && !rb.isKinematic)
+        {
+            // Dönüş kilitlerini açıyoruz ki karakter savrulup devrilebilsin.
+            rb.constraints = RigidbodyConstraints.None;
+
+            rb.AddForce(knockbackImpulse + Vector3.up * flingUpForce, ForceMode.Impulse);
+            rb.AddTorque(Random.onUnitSphere * flingTorque, ForceMode.Impulse);
+
+            // Kısa süre sonra yerde dondur, sonsuza kadar yuvarlanmasın.
+            freezeRoutine = StartCoroutine(FreezeAfterDelay());
+        }
+
+        OnEliminated?.Invoke();
+    }
+
+    IEnumerator FreezeAfterDelay()
+    {
+        yield return new WaitForSeconds(freezeDelay);
+
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
@@ -44,7 +88,7 @@ public class PlayerHealth : MonoBehaviour
             rb.isKinematic = true;
         }
 
-        OnEliminated?.Invoke();
+        freezeRoutine = null;
     }
 
     public void Revive()
@@ -55,6 +99,12 @@ public class PlayerHealth : MonoBehaviour
 
         Debug.Log(gameObject.name + " oyuna geri döndü!");
 
+        if (freezeRoutine != null)
+        {
+            StopCoroutine(freezeRoutine);
+            freezeRoutine = null;
+        }
+
         if (playerRenderer != null)
         {
             playerRenderer.material.color = originalColor;
@@ -63,9 +113,13 @@ public class PlayerHealth : MonoBehaviour
         if (rb != null)
         {
             rb.isKinematic = false;
+            rb.constraints = originalConstraints;
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
+
+        // Karakteri tekrar dik konuma getir (yön korunur).
+        transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
 
         OnRevived?.Invoke();
     }
