@@ -13,8 +13,9 @@ public class TeamControlManager : MonoBehaviour
     void Start()
     {
         // Oyuncular sahne referansi yerine PlayerManager'dan bulunur.
-        PlayerRole runner = PlayerManager.GetFirst(RoleType.Runner);
-        PlayerRole saver = PlayerManager.GetFirst(RoleType.Saver);
+        // Ayni rolde bot da olabilecegi icin insan kontrollu olani tercih ederiz.
+        PlayerRole runner = FindHumanControlled(RoleType.Runner);
+        PlayerRole saver = FindHumanControlled(RoleType.Saver);
 
         if (runner != null)
         {
@@ -35,6 +36,30 @@ public class TeamControlManager : MonoBehaviour
         }
 
         SwitchToRunner();
+    }
+
+    // Bu roldeki oyunculardan girdi bileseni (PlayerInputHandler) olani sec.
+    // Hicbiri insan kontrollu degilse ilk bulunan doner.
+    PlayerRole FindHumanControlled(RoleType role)
+    {
+        PlayerRole fallback = null;
+
+        foreach (PlayerRole player in PlayerManager.All)
+        {
+            if (player.roleType != role) continue;
+
+            if (fallback == null)
+            {
+                fallback = player;
+            }
+
+            if (player.GetComponent<PlayerInputHandler>() != null)
+            {
+                return player;
+            }
+        }
+
+        return fallback;
     }
 
     void OnDestroy()
