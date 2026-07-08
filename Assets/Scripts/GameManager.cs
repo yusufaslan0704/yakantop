@@ -16,6 +16,13 @@ public class GameManager : MonoBehaviour
     public float roundDuration = 60f;
     public float reviveCountdownDuration = 10f;
 
+    [Header("Match Settings")]
+    [Tooltip("Maçı kazanmak için gereken round galibiyeti sayısı.")]
+    public int roundsToWinMatch = 3;
+
+    [Tooltip("Round bittikten sonra yeni round'a geçmeden önceki bekleme (saniye).")]
+    public float intermissionDuration = 4f;
+
     private float currentTime;
     private float reviveCountdown;
 
@@ -23,6 +30,12 @@ public class GameManager : MonoBehaviour
     private bool gameEnded = false;
     private bool playerWon = false;
     private bool reviveCountdownActive = false;
+
+    // Maç durumu: round'lar üstü skor.
+    private int runnerTeamWins;
+    private int throwerTeamWins;
+    private bool matchEnded;
+    private float intermissionRemaining;
 
     private int score = 0;
 
@@ -83,11 +96,36 @@ public class GameManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.R))
         {
-            ResetRound();
+            // Maç bittiyse R yeni maç başlatır, değilse round'u yeniler.
+            if (matchEnded)
+            {
+                ResetMatch();
+            }
+            else
+            {
+                ResetRound();
+            }
+
             return;
         }
 
-        if (!roundActive || gameEnded)
+        // Round arası: geri sayım bitince yeni round otomatik başlar.
+        if (gameEnded)
+        {
+            if (!matchEnded)
+            {
+                intermissionRemaining -= Time.deltaTime;
+
+                if (intermissionRemaining <= 0f)
+                {
+                    ResetRound();
+                }
+            }
+
+            return;
+        }
+
+        if (!roundActive)
         {
             return;
         }
@@ -179,20 +217,50 @@ public class GameManager : MonoBehaviour
     void WinGame()
     {
         currentTime = 0f;
-        roundActive = false;
-        gameEnded = true;
         playerWon = true;
+        runnerTeamWins++;
 
-        Debug.Log("Kazandın!");
+        EndRound();
+
+        Debug.Log("Round kaçanların! Maç: " + runnerTeamWins + "-" + throwerTeamWins);
     }
 
     void LoseGame()
     {
+        playerWon = false;
+        throwerTeamWins++;
+
+        EndRound();
+
+        Debug.Log("Round atıcıların! Maç: " + runnerTeamWins + "-" + throwerTeamWins);
+    }
+
+    void EndRound()
+    {
         roundActive = false;
         gameEnded = true;
-        playerWon = false;
 
-        Debug.Log("Kaybettin!");
+        if (runnerTeamWins >= roundsToWinMatch || throwerTeamWins >= roundsToWinMatch)
+        {
+            matchEnded = true;
+
+            Debug.Log("MAÇ BİTTİ! Sonuç: " + runnerTeamWins + "-" + throwerTeamWins);
+        }
+        else
+        {
+            intermissionRemaining = intermissionDuration;
+        }
+    }
+
+    void ResetMatch()
+    {
+        runnerTeamWins = 0;
+        throwerTeamWins = 0;
+        matchEnded = false;
+
+        ResetRound();
+
+        Debug.Log("Yeni maç başladı!");
     }
 
     void ResetRound()
@@ -313,5 +381,25 @@ public class GameManager : MonoBehaviour
     public float GetReviveCountdown()
     {
         return reviveCountdown;
+    }
+
+    public int GetRunnerTeamWins()
+    {
+        return runnerTeamWins;
+    }
+
+    public int GetThrowerTeamWins()
+    {
+        return throwerTeamWins;
+    }
+
+    public bool IsMatchEnded()
+    {
+        return matchEnded;
+    }
+
+    public float GetIntermissionRemaining()
+    {
+        return intermissionRemaining;
     }
 }

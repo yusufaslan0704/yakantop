@@ -35,7 +35,9 @@ public class GameUI : MonoBehaviour
 
         if (scoreText != null)
         {
-            scoreText.text = "Skor: " + gameManager.GetScore();
+            // Maç skoru: Kaçanlar - Atıcılar (round galibiyetleri).
+            scoreText.text = "Maç: " + gameManager.GetRunnerTeamWins() +
+                             " - " + gameManager.GetThrowerTeamWins();
         }
     }
 
@@ -69,8 +71,27 @@ public class GameUI : MonoBehaviour
 
             if (ended)
             {
-                statusText.text = gameManager.DidPlayerWin() ? "KAZANDIN!" : "KAYBETTİN!";
+                statusText.text = BuildEndText();
             }
         }
+    }
+
+    string BuildEndText()
+    {
+        string matchScore = gameManager.GetRunnerTeamWins() + " - " + gameManager.GetThrowerTeamWins();
+
+        // Maç bitti: kesin sonuç + yeni maç talimatı.
+        if (gameManager.IsMatchEnded())
+        {
+            string winner = gameManager.DidPlayerWin() ? "KAÇANLAR" : "ATICILAR";
+
+            return "MAÇI " + winner + " KAZANDI!\n" + matchScore + "\nYeni maç için R";
+        }
+
+        // Round bitti: sonuç + yeni round geri sayımı.
+        string roundResult = gameManager.DidPlayerWin() ? "ROUND KAÇANLARIN!" : "ROUND ATICILARIN!";
+        int seconds = Mathf.CeilToInt(gameManager.GetIntermissionRemaining());
+
+        return roundResult + "\n" + matchScore + "\nYeni round: " + Mathf.Max(0, seconds);
     }
 }
