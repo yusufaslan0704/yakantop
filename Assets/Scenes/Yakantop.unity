@@ -5328,6 +5328,52 @@ MonoBehaviour:
   bobSpeed: 11
   duckLerpSpeed: 14
   groundCheckDistance: 1.15
+--- !u!1 &310000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 310000002}
+  - component: {fileID: 310000003}
+  m_Layer: 0
+  m_Name: MixamoTester
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &310000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 310000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: -6, y: 0, z: 6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+--- !u!114 &310000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 310000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c9055315bc04b13bf31d67d8b4fd1b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MixamoAnimationTester
+  resourcePath: Models/Chicken Dance
+  scaleMultiplier: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -5340,6 +5386,7 @@ SceneRoots:
   - {fileID: 985860510}
   - {fileID: 1459117607}
   - {fileID: 300000002}
+  - {fileID: 310000002}
   - {fileID: 2130826858}
   - {fileID: 470240654}
   - {fileID: 2016876418}
