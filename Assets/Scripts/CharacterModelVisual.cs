@@ -291,9 +291,16 @@ public class CharacterModelVisual : MonoBehaviour
     {
         for (int i = 0; i < playables.Count; i++)
         {
-            if (loopingStates[i] && playables[i].GetTime() >= clips[i].length)
+            if (!loopingStates[i]) continue;
+
+            double time = playables[i].GetTime();
+            double length = clips[i].length;
+
+            // Basa "sarmak" yerine fazi koruyarak dongule:
+            // taskan sure yeni turun basina eklenir, takilma olmaz.
+            if (time >= length && length > 0)
             {
-                playables[i].SetTime(0);
+                playables[i].SetTime(time % length);
             }
         }
     }
