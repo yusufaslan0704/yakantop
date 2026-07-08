@@ -1,15 +1,12 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public class PlayerDash : MonoBehaviour
 {
     [Header("Dash Settings")]
     public float dashDistance = 4f;
     public float dashDuration = 0.12f;
     public float dashCooldown = 2f;
-
-    [Header("Collision Check")]
-    public float wallCheckHeight = 1f;
-    public float wallStopDistance = 0.8f;
 
     [Header("Dash VFX")]
     public GameObject dashVfxPrefab;
@@ -21,12 +18,18 @@ public class PlayerDash : MonoBehaviour
     public float dashShakeStrength = 0.08f;
 
     private bool isDashing = false;
+    private float dashTimer = 0f;
     private float nextDashTime = 0f;
+    private float nextVfxTime = 0f;
 
+    private Vector3 dashDirection;
+
+    private Rigidbody rb;
     private PlayerHealth playerHealth;
 
     void Awake()
     {
+        rb = GetComponent<Rigidbody>();
         playerHealth = GetComponent<PlayerHealth>();
     }
 
@@ -35,67 +38,91 @@ public class PlayerDash : MonoBehaviour
         // Elenen oyuncu dash atamaz.
         if (playerHealth != null && playerHealth.isEliminated)
         {
+            StopDash();
             return;
         }
 
         // Sol Shift ile dash.
         if (Input.GetKeyDown(KeyCode.LeftShift) && Time.time >= nextDashTime && !isDashing)
         {
-            PlayDashFeedback();
+            StartDash();
+        }
 
-            StartCoroutine(Dash());
-
-            nextDashTime = Time.time + dashCooldown;
+        // Dash sırasında aralıklarla VFX bırak.
+        if (isDashing && Time.time >= nextVfxTime)
+        {
+            SpawnDashVFX();
+            nextVfxTime = Time.time + vfxSpawnInterval;
         }
     }
 
-    private System.Collections.IEnumerator Dash()
+    void FixedUpdate()
+    {
+        if (!isDashing)
+        {
+            return;
+        }
+
+        if (rb.isKinematic)
+        {
+            StopDash();
+            return;
+        }
+
+        // Dash hızı: toplam mesafeyi toplam sürede alacak sabit hız.
+        // Duvara çarparsa fizik motoru karakteri kendiliğinden durdurur.
+        float dashSpeed = dashDistance / dashDuration;
+
+        Vector3 velocity = dashDirection * dashSpeed;
+        velocity.y = rb.linearVelocity.y;
+
+        rb.linearVelocity = velocity;
+
+        dashTimer -= Time.fixedDeltaTime;
+
+        if (dashTimer <= 0f)
+        {
+            StopDash();
+        }
+    }
+
+    void StartDash()
     {
         isDashing = true;
+        dashTimer = dashDuration;
+        dashDirection = transform.forward;
+        dashDirection.y = 0f;
+        dashDirection.Normalize();
 
-        Vector3 startPosition = transform.position;
-        Vector3 dashDirection = transform.forward;
+        nextDashTime = Time.time + dashCooldown;
+        nextVfxTime = Time.time;
 
-        float finalDashDistance = dashDistance;
+        PlayDashFeedback();
+    }
 
-        // Dash yönünde duvar var mı kontrol ediyoruz.
-        Vector3 rayOrigin = transform.position + Vector3.up * wallCheckHeight;
-
-        if (Physics.Raycast(rayOrigin, dashDirection, out RaycastHit hit, dashDistance))
+    void StopDash()
+    {
+        if (!isDashing)
         {
-            finalDashDistance = Mathf.Max(0f, hit.distance - wallStopDistance);
+            return;
         }
-
-        Vector3 targetPosition = startPosition + dashDirection * finalDashDistance;
-
-        float elapsed = 0f;
-        float nextVfxTime = 0f;
-
-        SpawnDashVFX();
-
-        while (elapsed < dashDuration)
-        {
-            transform.position = Vector3.Lerp(
-                startPosition,
-                targetPosition,
-                elapsed / dashDuration
-            );
-
-            if (elapsed >= nextVfxTime)
-            {
-                SpawnDashVFX();
-                nextVfxTime = elapsed + vfxSpawnInterval;
-            }
-
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        transform.position = targetPosition;
-
-        SpawnDashVFX();
 
         isDashing = false;
+
+        // Dash bitince kalan hızı sıfırla ki karakter kaymaya devam etmesin.
+        if (rb != null && !rb.isKinematic)
+        {
+            Vector3 velocity = rb.linearVelocity;
+            velocity.x = 0f;
+            velocity.z = 0f;
+            rb.linearVelocity = velocity;
+        }
+    }
+
+    void OnDisable()
+    {
+        // Kontrol başka karaktere geçerse dash yarıda kesilsin.
+        StopDash();
     }
 
     void PlayDashFeedback()

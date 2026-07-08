@@ -1352,11 +1352,6 @@ MonoBehaviour:
   reviveCountdownDuration: 10
   runnerPlayer: {fileID: 892651412}
   saverPlayer: {fileID: 1459117594}
-  timerText: {fileID: 1350142008}
-  scoreText: {fileID: 924857731}
-  statusText: {fileID: 3229820}
-  reviveCountdownText: {fileID: 93596024}
-  endGamePanel: {fileID: 442145311}
 --- !u!114 &470240656
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1824,7 +1819,6 @@ GameObject:
   - component: {fileID: 892651420}
   - component: {fileID: 892651421}
   - component: {fileID: 892651422}
-  - component: {fileID: 892651423}
   - component: {fileID: 892651424}
   - component: {fileID: 892651425}
   m_Layer: 0
@@ -1873,9 +1867,9 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 80
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!136 &892651415
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -2046,20 +2040,6 @@ MonoBehaviour:
   reviveVfxOffset: {x: 0, y: 1.2, z: 0}
   reviveShakeDuration: 0.12
   reviveShakeStrength: 0.1
---- !u!114 &892651423
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 892651412}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 72d1e15f2d6a3aa4cb236d8a630fa8b7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerZoneDetector
-  currentZone: None
-  enforceZoneRules: 1
 --- !u!114 &892651424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2244,7 +2224,6 @@ GameObject:
   - component: {fileID: 985860503}
   - component: {fileID: 985860502}
   - component: {fileID: 985860501}
-  - component: {fileID: 985860500}
   - component: {fileID: 985860499}
   - component: {fileID: 985860498}
   - component: {fileID: 985860511}
@@ -2284,20 +2263,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerRole
   roleType: 1
---- !u!114 &985860500
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 985860497}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 72d1e15f2d6a3aa4cb236d8a630fa8b7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerZoneDetector
-  currentZone: None
-  enforceZoneRules: 1
 --- !u!114 &985860501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2410,9 +2375,9 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 80
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!136 &985860507
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -3268,7 +3233,6 @@ GameObject:
   - component: {fileID: 1459117600}
   - component: {fileID: 1459117599}
   - component: {fileID: 1459117598}
-  - component: {fileID: 1459117597}
   - component: {fileID: 1459117596}
   - component: {fileID: 1459117595}
   m_Layer: 0
@@ -3307,20 +3271,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerRole
   roleType: 2
---- !u!114 &1459117597
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1459117594}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 72d1e15f2d6a3aa4cb236d8a630fa8b7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerZoneDetector
-  currentZone: None
-  enforceZoneRules: 1
 --- !u!114 &1459117598
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3433,9 +3383,9 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 80
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!136 &1459117604
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -4650,6 +4600,9 @@ MonoBehaviour:
   gameManager: {fileID: 470240655}
   timerText: {fileID: 1350142008}
   scoreText: {fileID: 924857731}
+  reviveCountdownText: {fileID: 93596024}
+  endGamePanel: {fileID: 442145311}
+  statusText: {fileID: 3229820}
 --- !u!114 &2016876420
 MonoBehaviour:
   m_ObjectHideFlags: 0

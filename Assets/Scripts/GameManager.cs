@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -11,18 +10,12 @@ public class GameManager : MonoBehaviour
     public GameObject runnerPlayer;
     public GameObject saverPlayer;
 
-    [Header("UI")]
-    public TMP_Text timerText;
-    public TMP_Text scoreText;
-    public TMP_Text statusText;
-    public TMP_Text reviveCountdownText;
-    public GameObject endGamePanel;
-
     private float currentTime;
     private float reviveCountdown;
 
     private bool roundActive = false;
     private bool gameEnded = false;
+    private bool playerWon = false;
     private bool reviveCountdownActive = false;
 
     private int score = 0;
@@ -60,7 +53,6 @@ public class GameManager : MonoBehaviour
 
         if (!roundActive || gameEnded)
         {
-            UpdateUI();
             return;
         }
 
@@ -73,8 +65,6 @@ public class GameManager : MonoBehaviour
         }
 
         CheckReviveState();
-
-        UpdateUI();
     }
 
     void CheckReviveState()
@@ -120,36 +110,16 @@ public class GameManager : MonoBehaviour
         score = 0;
         roundActive = true;
         gameEnded = false;
+        playerWon = false;
         reviveCountdownActive = false;
 
-        if (endGamePanel != null)
-        {
-            endGamePanel.SetActive(false);
-        }
-
-        if (statusText != null)
-        {
-            statusText.gameObject.SetActive(false);
-        }
-
-        if (reviveCountdownText != null)
-        {
-            reviveCountdownText.gameObject.SetActive(false);
-        }
-
         Debug.Log("Round başladı!");
-        UpdateUI();
     }
 
     void StartReviveCountdown()
     {
         reviveCountdownActive = true;
         reviveCountdown = reviveCountdownDuration;
-
-        if (reviveCountdownText != null)
-        {
-            reviveCountdownText.gameObject.SetActive(true);
-        }
 
         Debug.Log("Runner elendi! Revive süresi başladı.");
     }
@@ -159,11 +129,6 @@ public class GameManager : MonoBehaviour
         reviveCountdownActive = false;
         reviveCountdown = reviveCountdownDuration;
 
-        if (reviveCountdownText != null)
-        {
-            reviveCountdownText.gameObject.SetActive(false);
-        }
-
         Debug.Log("Runner kurtarıldı! Oyun devam ediyor.");
     }
 
@@ -172,13 +137,7 @@ public class GameManager : MonoBehaviour
         currentTime = 0f;
         roundActive = false;
         gameEnded = true;
-
-        ShowEndGamePanel("KAZANDIN!");
-
-        if (reviveCountdownText != null)
-        {
-            reviveCountdownText.gameObject.SetActive(false);
-        }
+        playerWon = true;
 
         Debug.Log("Kazandın!");
         Time.timeScale = 0f;
@@ -188,30 +147,10 @@ public class GameManager : MonoBehaviour
     {
         roundActive = false;
         gameEnded = true;
-
-        ShowEndGamePanel("KAYBETTİN!");
-
-        if (reviveCountdownText != null)
-        {
-            reviveCountdownText.gameObject.SetActive(false);
-        }
+        playerWon = false;
 
         Debug.Log("Kaybettin!");
         Time.timeScale = 0f;
-    }
-
-    void ShowEndGamePanel(string message)
-    {
-        if (endGamePanel != null)
-        {
-            endGamePanel.SetActive(true);
-        }
-
-        if (statusText != null)
-        {
-            statusText.gameObject.SetActive(true);
-            statusText.text = message;
-        }
     }
 
     void ResetRound()
@@ -240,33 +179,11 @@ public class GameManager : MonoBehaviour
         Debug.Log("Round resetlendi!");
     }
 
-    void UpdateUI()
-    {
-        if (timerText != null)
-        {
-            int seconds = Mathf.CeilToInt(currentTime);
-            timerText.text = seconds.ToString();
-        }
-
-        if (scoreText != null)
-        {
-            scoreText.text = "Skor: " + score;
-        }
-
-        if (reviveCountdownText != null && reviveCountdownActive)
-        {
-            int seconds = Mathf.CeilToInt(reviveCountdown);
-            reviveCountdownText.text = "Runner'ı kurtar: " + seconds;
-        }
-    }
-
     public void AddScore(int amount)
     {
         if (gameEnded) return;
 
         score += amount;
-        Debug.Log("Skor arttı: " + score);
-        UpdateUI();
     }
 
     public int GetScore()
@@ -284,8 +201,23 @@ public class GameManager : MonoBehaviour
         return gameEnded;
     }
 
+    public bool DidPlayerWin()
+    {
+        return playerWon;
+    }
+
     public float GetCurrentTime()
     {
         return currentTime;
+    }
+
+    public bool IsReviveCountdownActive()
+    {
+        return reviveCountdownActive;
+    }
+
+    public float GetReviveCountdown()
+    {
+        return reviveCountdown;
     }
 }
