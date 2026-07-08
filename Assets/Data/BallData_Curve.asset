@@ -25,4 +25,4 @@ MonoBehaviour:
   hitSfx: {fileID: 0}
   maxBounces: 0
   bounceSpeedKeep: 0.8
-  curveForce: 18
+  curveForce: 32

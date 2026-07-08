@@ -23,6 +23,6 @@ MonoBehaviour:
   hitStopDuration: 0.05
   throwSfx: {fileID: 0}
   hitSfx: {fileID: 0}
-  maxBounces: 2
-  bounceSpeedKeep: 0.85
+  maxBounces: 3
+  bounceSpeedKeep: 0.95
   curveForce: 0
