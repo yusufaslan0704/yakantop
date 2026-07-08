@@ -1,7 +1,9 @@
 using UnityEngine;
 
-// Egilme: yuksek gelen toplarin altindan kacmak icin.
-// Karakter kisalir (gorsel + collider birlikte) ve yavaslar.
+// Egilme durumu: yuksek gelen toplarin altindan kacmak icin.
+// Kuculme gorseli ve collider degisimi CharacterAnimator'da
+// (root scale uzerinden) yumusak sekilde islenir; burasi sadece
+// "su an egiliyor mu?" sorusunun cevabini tutar.
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerDuck : MonoBehaviour
 {
@@ -18,68 +20,25 @@ public class PlayerDuck : MonoBehaviour
     private PlayerHealth playerHealth;
     private PlayerInputHandler inputHandler;
 
-    private Vector3 standingScale;
-    private float standingHalfHeight;
-
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         playerHealth = GetComponent<PlayerHealth>();
         inputHandler = GetComponent<PlayerInputHandler>();
-
-        standingScale = transform.localScale;
-
-        CapsuleCollider capsule = GetComponent<CapsuleCollider>();
-        standingHalfHeight = capsule != null ? capsule.height * 0.5f : 1f;
     }
 
     void Update()
     {
-        bool wantsToDuck = GameManager.RoundIsActive &&
-                           inputHandler != null &&
-                           inputHandler.DuckHeld &&
-                           (playerHealth == null || !playerHealth.IsEliminated) &&
-                           !rb.isKinematic;
-
-        if (wantsToDuck && !IsDucking)
-        {
-            StartDuck();
-        }
-        else if (!wantsToDuck && IsDucking)
-        {
-            StopDuck();
-        }
-    }
-
-    void StartDuck()
-    {
-        IsDucking = true;
-
-        Vector3 scale = standingScale;
-        scale.y *= duckHeightScale;
-        transform.localScale = scale;
-
-        // Kisalinca ayaklar yerde kalsin diye govdeyi asagi indiriyoruz.
-        float drop = standingHalfHeight * (1f - duckHeightScale) * standingScale.y;
-        rb.position += Vector3.down * drop;
-    }
-
-    void StopDuck()
-    {
-        IsDucking = false;
-
-        transform.localScale = standingScale;
-
-        float rise = standingHalfHeight * (1f - duckHeightScale) * standingScale.y;
-        rb.position += Vector3.up * rise;
+        IsDucking = GameManager.RoundIsActive &&
+                    inputHandler != null &&
+                    inputHandler.DuckHeld &&
+                    (playerHealth == null || !playerHealth.IsEliminated) &&
+                    !rb.isKinematic;
     }
 
     void OnDisable()
     {
         // Kontrol degisiminde egik kalmasin.
-        if (IsDucking)
-        {
-            StopDuck();
-        }
+        IsDucking = false;
     }
 }

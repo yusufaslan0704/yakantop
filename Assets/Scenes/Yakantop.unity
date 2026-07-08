@@ -1825,6 +1825,7 @@ GameObject:
   - component: {fileID: 892651501}
   - component: {fileID: 892651502}
   - component: {fileID: 892651503}
+  - component: {fileID: 892651504}
   m_Layer: 0
   m_Name: RunnerPlayer
   m_TagString: Player
@@ -2234,6 +2235,7 @@ GameObject:
   - component: {fileID: 985860600}
   - component: {fileID: 985860601}
   - component: {fileID: 985860602}
+  - component: {fileID: 985860603}
   m_Layer: 0
   m_Name: ThrowerPlayer
   m_TagString: Player
@@ -3246,6 +3248,7 @@ GameObject:
   - component: {fileID: 1459117701}
   - component: {fileID: 1459117702}
   - component: {fileID: 1459117703}
+  - component: {fileID: 1459117704}
   m_Layer: 0
   m_Name: SaverPlayer
   m_TagString: Player
@@ -4672,6 +4675,7 @@ GameObject:
   - component: {fileID: 2130826855}
   - component: {fileID: 2130826854}
   - component: {fileID: 2130826859}
+  - component: {fileID: 2130826860}
   m_Layer: 0
   m_Name: TargetDummy
   m_TagString: Player
@@ -5011,6 +5015,7 @@ GameObject:
   - component: {fileID: 300000008}
   - component: {fileID: 300000009}
   - component: {fileID: 300000010}
+  - component: {fileID: 300000011}
   m_Layer: 0
   m_Name: RunnerBot
   m_TagString: Player
@@ -5203,6 +5208,126 @@ MonoBehaviour:
   newTargetIntervalMin: 1.5
   newTargetIntervalMax: 3
   zonePadding: 1
+--- !u!114 &892651504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 892651412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27df222951714c89aebccd7a01f6281a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimator
+  createEyes: 1
+  eyeColor: {r: 0.08, g: 0.08, b: 0.08, a: 1}
+  eyeSize: 0.16
+  blinkInterval: 3.5
+  blinkDuration: 0.12
+  jumpStretch: 1.12
+  landSquash: 0.82
+  recoverSpeed: 8
+  bobAmount: 0.045
+  bobSpeed: 11
+  duckLerpSpeed: 14
+  groundCheckDistance: 1.15
+--- !u!114 &1459117704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1459117594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27df222951714c89aebccd7a01f6281a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimator
+  createEyes: 1
+  eyeColor: {r: 0.08, g: 0.08, b: 0.08, a: 1}
+  eyeSize: 0.16
+  blinkInterval: 3.5
+  blinkDuration: 0.12
+  jumpStretch: 1.12
+  landSquash: 0.82
+  recoverSpeed: 8
+  bobAmount: 0.045
+  bobSpeed: 11
+  duckLerpSpeed: 14
+  groundCheckDistance: 1.15
+--- !u!114 &985860603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 985860497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27df222951714c89aebccd7a01f6281a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimator
+  createEyes: 1
+  eyeColor: {r: 0.08, g: 0.08, b: 0.08, a: 1}
+  eyeSize: 0.16
+  blinkInterval: 3.5
+  blinkDuration: 0.12
+  jumpStretch: 1.12
+  landSquash: 0.82
+  recoverSpeed: 8
+  bobAmount: 0.045
+  bobSpeed: 11
+  duckLerpSpeed: 14
+  groundCheckDistance: 1.15
+--- !u!114 &300000011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27df222951714c89aebccd7a01f6281a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimator
+  createEyes: 1
+  eyeColor: {r: 0.08, g: 0.08, b: 0.08, a: 1}
+  eyeSize: 0.16
+  blinkInterval: 3.5
+  blinkDuration: 0.12
+  jumpStretch: 1.12
+  landSquash: 0.82
+  recoverSpeed: 8
+  bobAmount: 0.045
+  bobSpeed: 11
+  duckLerpSpeed: 14
+  groundCheckDistance: 1.15
+--- !u!114 &2130826860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2130826851}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27df222951714c89aebccd7a01f6281a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimator
+  createEyes: 1
+  eyeColor: {r: 0.08, g: 0.08, b: 0.08, a: 1}
+  eyeSize: 0.16
+  blinkInterval: 3.5
+  blinkDuration: 0.12
+  jumpStretch: 1.12
+  landSquash: 0.82
+  recoverSpeed: 8
+  bobAmount: 0.045
+  bobSpeed: 11
+  duckLerpSpeed: 14
+  groundCheckDistance: 1.15
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
