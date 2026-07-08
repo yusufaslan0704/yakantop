@@ -117,12 +117,12 @@ public class CharacterModelVisual : MonoBehaviour
         HideOldVisuals(oldRenderers);
         BuildGraph(animator);
 
-        // Kapsul gozleri artik gereksiz; squash & stretch ise modelde de calisir.
+        // Kapsul gozleri, bob ve squash artik gereksiz; gercek animasyonlar var.
         CharacterAnimator proceduralAnimator = GetComponent<CharacterAnimator>();
 
         if (proceduralAnimator != null)
         {
-            proceduralAnimator.DisableEyes();
+            proceduralAnimator.EnterModelMode();
         }
 
         // Elenme kirmizisi yeni modelin renderer'larina da uygulanabilsin.
@@ -292,6 +292,10 @@ public class CharacterModelVisual : MonoBehaviour
         for (int i = 0; i < playables.Count; i++)
         {
             if (!loopingStates[i]) continue;
+
+            // Import ayarinda "Loop Time" aciksa klip kendi kendine dikissiz
+            // donguleniyor; elle sarmaya gerek yok.
+            if (clips[i].isLooping) continue;
 
             double time = playables[i].GetTime();
             double length = clips[i].length;

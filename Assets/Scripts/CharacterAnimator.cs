@@ -50,6 +50,10 @@ public class CharacterAnimator : MonoBehaviour
     private float nextBlinkTime;
     private float blinkEndTime;
 
+    // Rigli model yuklendiginde true olur: bob ve squash & stretch kapali kalir
+    // (gercek animasyonlar zaten bunlari iceriyor), sadece egilme olcegi calisir.
+    private bool modelMode;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -95,7 +99,7 @@ public class CharacterAnimator : MonoBehaviour
 
         bool grounded = IsGrounded();
 
-        if (rb != null && !rb.isKinematic)
+        if (!modelMode && rb != null && !rb.isKinematic)
         {
             // Yukselirken uzun ve ince gorun.
             if (!grounded && rb.linearVelocity.y > 0.5f)
@@ -114,10 +118,10 @@ public class CharacterAnimator : MonoBehaviour
 
         impulseFactor = Mathf.Lerp(impulseFactor, 1f, recoverSpeed * Time.deltaTime);
 
-        // Kosarken hafif asagi-yukari zipla.
+        // Kosarken hafif asagi-yukari zipla (sadece kapsul gorselinde).
         float bob = 0f;
 
-        if (grounded && rb != null && !rb.isKinematic)
+        if (!modelMode && grounded && rb != null && !rb.isKinematic)
         {
             Vector3 horizontalVelocity = rb.linearVelocity;
             horizontalVelocity.y = 0f;
@@ -137,6 +141,14 @@ public class CharacterAnimator : MonoBehaviour
             baseScale.y * yFactor,
             baseScale.z * xzFactor
         );
+    }
+
+    // Gercek 3D model yuklendiginde cagrilir: gozler silinir,
+    // bob ve squash & stretch kapatilir (animasyonlar bunlari zaten yapiyor).
+    public void EnterModelMode()
+    {
+        modelMode = true;
+        DisableEyes();
     }
 
     // Gercek 3D model yuklendiginde kapsul gozlerine gerek kalmaz.
