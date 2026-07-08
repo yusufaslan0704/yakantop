@@ -105,6 +105,15 @@ public class TeamControlManager : MonoBehaviour
         PlayerDash dash = player.GetComponent<PlayerDash>();
         PlayerThrow throwScript = player.GetComponent<PlayerThrow>();
         PlayerRevive revive = player.GetComponent<PlayerRevive>();
+        PlayerJump jump = player.GetComponent<PlayerJump>();
+        PlayerDuck duck = player.GetComponent<PlayerDuck>();
+        PlayerEmote emote = player.GetComponent<PlayerEmote>();
+
+        // Ayni klavyeyi dinledikleri icin sadece kontrol edilen karakter
+        // ziplayip egilebilir ve emote atabilir.
+        if (jump != null) jump.enabled = isControlled;
+        if (duck != null) duck.enabled = isControlled;
+        if (emote != null) emote.enabled = isControlled;
 
         if (movement != null)
         {

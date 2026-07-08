@@ -1822,6 +1822,9 @@ GameObject:
   - component: {fileID: 892651424}
   - component: {fileID: 892651425}
   - component: {fileID: 892651500}
+  - component: {fileID: 892651501}
+  - component: {fileID: 892651502}
+  - component: {fileID: 892651503}
   m_Layer: 0
   m_Name: RunnerPlayer
   m_TagString: Player
@@ -2230,6 +2233,7 @@ GameObject:
   - component: {fileID: 985860511}
   - component: {fileID: 985860600}
   - component: {fileID: 985860601}
+  - component: {fileID: 985860602}
   m_Layer: 0
   m_Name: ThrowerPlayer
   m_TagString: Player
@@ -3239,6 +3243,9 @@ GameObject:
   - component: {fileID: 1459117596}
   - component: {fileID: 1459117595}
   - component: {fileID: 1459117700}
+  - component: {fileID: 1459117701}
+  - component: {fileID: 1459117702}
+  - component: {fileID: 1459117703}
   m_Layer: 0
   m_Name: SaverPlayer
   m_TagString: Player
@@ -4865,6 +4872,128 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6cd8e4525a5446eaccf9408f6d70652, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThrowerHumanControl
+--- !u!114 &892651501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 892651412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 717f264821a044058a7dfe8ac28b93ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerJump
+  jumpForce: 7
+  groundCheckDistance: 1.15
+--- !u!114 &892651502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 892651412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 099e56e243554f3e862b2180f38bead2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDuck
+  duckHeightScale: 0.55
+  duckSpeedMultiplier: 0.5
+--- !u!114 &892651503
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 892651412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e01c411709834d289a69b80c22585775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerEmote
+  emotes:
+  - Haha!
+  - Buraya at!
+  - Iskaladin!
+  - <3
+  displayDuration: 2
+  heightOffset: 2.7
+  textSize: 0.35
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  cooldown: 0.8
+--- !u!114 &1459117701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1459117594}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 717f264821a044058a7dfe8ac28b93ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerJump
+  jumpForce: 7
+  groundCheckDistance: 1.15
+--- !u!114 &1459117702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1459117594}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 099e56e243554f3e862b2180f38bead2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDuck
+  duckHeightScale: 0.55
+  duckSpeedMultiplier: 0.5
+--- !u!114 &1459117703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1459117594}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e01c411709834d289a69b80c22585775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerEmote
+  emotes:
+  - Haha!
+  - Geliyorum!
+  - Dayan!
+  - <3
+  displayDuration: 2
+  heightOffset: 2.7
+  textSize: 0.35
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  cooldown: 0.8
+--- !u!114 &985860602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 985860497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e01c411709834d289a69b80c22585775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerEmote
+  emotes:
+  - Haha!
+  - Kacamazsin!
+  - Sıradaki!
+  - <3
+  displayDuration: 2
+  heightOffset: 2.7
+  textSize: 0.35
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  cooldown: 0.8
 --- !u!1 &300000001
 GameObject:
   m_ObjectHideFlags: 0

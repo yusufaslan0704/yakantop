@@ -26,6 +26,11 @@ public class PlayerInputHandler : MonoBehaviour
     public bool ThrowPressed { get; private set; }
     public bool ThrowReleased { get; private set; }
     public bool ReviveHeld { get; private set; }
+    public bool JumpPressed { get; private set; }
+    public bool DuckHeld { get; private set; }
+
+    // Bu kare basilan emote (0-3). Basilmadiysa -1.
+    public int EmoteIndex { get; private set; } = -1;
 
     void Update()
     {
@@ -62,6 +67,15 @@ public class PlayerInputHandler : MonoBehaviour
         DashPressed = keyboard.leftShiftKey.wasPressedThisFrame;
         ReviveHeld = keyboard.fKey.isPressed;
 
+        JumpPressed = keyboard.spaceKey.wasPressedThisFrame;
+        DuckHeld = keyboard.leftCtrlKey.isPressed || keyboard.cKey.isPressed;
+
+        EmoteIndex = -1;
+        if (keyboard.digit1Key.wasPressedThisFrame) EmoteIndex = 0;
+        else if (keyboard.digit2Key.wasPressedThisFrame) EmoteIndex = 1;
+        else if (keyboard.digit3Key.wasPressedThisFrame) EmoteIndex = 2;
+        else if (keyboard.digit4Key.wasPressedThisFrame) EmoteIndex = 3;
+
         ThrowPressed = mouse != null && mouse.leftButton.wasPressedThisFrame;
         ThrowReleased = mouse != null && mouse.leftButton.wasReleasedThisFrame;
     }
@@ -97,8 +111,20 @@ public class PlayerInputHandler : MonoBehaviour
         ThrowReleased = gamepad.rightTrigger.wasReleasedThisFrame ||
                         gamepad.buttonWest.wasReleasedThisFrame;
 
-        // Revive: A basili tut.
-        ReviveHeld = gamepad.buttonSouth.isPressed;
+        // Ziplama: A. (Revive X'e tasindi; roller farkli oldugu icin
+        // X'in atisla cakismasi sorun degil: Saver atamaz, Thrower revive edemez.)
+        JumpPressed = gamepad.buttonSouth.wasPressedThisFrame;
+        ReviveHeld = gamepad.buttonWest.isPressed;
+
+        // Egilme: LT basili tut.
+        DuckHeld = gamepad.leftTrigger.isPressed;
+
+        // Emote: D-Pad yonleri.
+        EmoteIndex = -1;
+        if (gamepad.dpad.up.wasPressedThisFrame) EmoteIndex = 0;
+        else if (gamepad.dpad.right.wasPressedThisFrame) EmoteIndex = 1;
+        else if (gamepad.dpad.down.wasPressedThisFrame) EmoteIndex = 2;
+        else if (gamepad.dpad.left.wasPressedThisFrame) EmoteIndex = 3;
     }
 
     Gamepad GetGamepad()
@@ -118,5 +144,8 @@ public class PlayerInputHandler : MonoBehaviour
         ThrowPressed = false;
         ThrowReleased = false;
         ReviveHeld = false;
+        JumpPressed = false;
+        DuckHeld = false;
+        EmoteIndex = -1;
     }
 }

@@ -16,6 +16,7 @@ public class PlayerMovement : MonoBehaviour
     private PlayerHealth playerHealth;
     private PlayerDash playerDash;
     private PlayerInputHandler inputHandler;
+    private PlayerDuck playerDuck;
 
     void Awake()
     {
@@ -23,6 +24,7 @@ public class PlayerMovement : MonoBehaviour
         playerHealth = GetComponent<PlayerHealth>();
         playerDash = GetComponent<PlayerDash>();
         inputHandler = GetComponent<PlayerInputHandler>();
+        playerDuck = GetComponent<PlayerDuck>();
     }
 
     void Update()
@@ -101,7 +103,15 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        Vector3 velocity = moveDirection * moveSpeed;
+        float speed = moveSpeed;
+
+        // Egilirken yavasla.
+        if (playerDuck != null && playerDuck.IsDucking)
+        {
+            speed *= playerDuck.duckSpeedMultiplier;
+        }
+
+        Vector3 velocity = moveDirection * speed;
         velocity.y = rb.linearVelocity.y; // Yerçekimini koru.
 
         rb.linearVelocity = velocity;
