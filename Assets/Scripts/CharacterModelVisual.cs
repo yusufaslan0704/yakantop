@@ -29,8 +29,13 @@ public class CharacterModelVisual : MonoBehaviour
     public string runClipPath = "Models/Running";
     public string jumpClipPath = "Models/Jump";
 
-    [Tooltip("Zipla klibi fizik ziplamasindan uzun; hizlandirarak esitliyoruz.")]
-    public float jumpAnimationSpeed = 1.8f;
+    [Tooltip("Zipla klibinin basindaki yere comelme (hazirlik) kismi atlanir (saniye). " +
+             "Fizik ziplamasi aninda basladigi icin bu kisim gecikme gibi gorunuyor.")]
+    public float jumpClipSkipStart = 0.35f;
+
+    [Tooltip("Zipla animasyonu, hesaplanan havada kalma suresinin icine sigdirilir. " +
+             "1'den buyuk deger animasyonu daha da hizlandirir.")]
+    public float jumpSpeedMultiplier = 1.15f;
 
     [Header("Dances (emote sirasina gore)")]
     public string[] danceClipPaths =
@@ -166,11 +171,6 @@ public class CharacterModelVisual : MonoBehaviour
         runIndex = AddClip(runClipPath, looping: true);
         jumpIndex = AddClip(jumpClipPath, looping: false);
 
-        if (jumpIndex >= 0)
-        {
-            playables[jumpIndex].SetSpeed(jumpAnimationSpeed);
-        }
-
         foreach (string dancePath in danceClipPaths)
         {
             danceIndices.Add(AddClip(dancePath, looping: false));
@@ -304,7 +304,14 @@ public class CharacterModelVisual : MonoBehaviour
             // Tek seferlik klipler (zipla/dans) hep bastan oynasin.
             if (targetIndex >= 0 && !loopingStates[targetIndex])
             {
-                playables[targetIndex].SetTime(0);
+                if (targetIndex == jumpIndex)
+                {
+                    SyncJumpClip();
+                }
+                else
+                {
+                    playables[targetIndex].SetTime(0);
+                }
             }
 
             currentIndex = targetIndex;
@@ -317,6 +324,23 @@ public class CharacterModelVisual : MonoBehaviour
 
             mixer.SetInputWeight(i, Mathf.MoveTowards(current, target, transitionSpeed * Time.deltaTime));
         }
+    }
+
+    // Zipla klibini gercek havada kalma suresine sigdirir:
+    // hazirlik kismi atlanir, kalan kisim tahmini ucus suresinde bitecek hizda oynar.
+    void SyncJumpClip()
+    {
+        float skip = Mathf.Clamp(jumpClipSkipStart, 0f, clips[jumpIndex].length * 0.8f);
+        float remainingClip = clips[jumpIndex].length - skip;
+
+        // Yukari cikis + asagi inis suresi: t = 2v / g.
+        float upVelocity = rb != null ? Mathf.Max(0f, rb.linearVelocity.y) : 0f;
+        float airTime = Mathf.Max(0.35f, 2f * upVelocity / -Physics.gravity.y);
+
+        float speed = (remainingClip / airTime) * Mathf.Max(0.1f, jumpSpeedMultiplier);
+
+        playables[jumpIndex].SetTime(skip);
+        playables[jumpIndex].SetSpeed(speed);
     }
 
     void LoopClips()
