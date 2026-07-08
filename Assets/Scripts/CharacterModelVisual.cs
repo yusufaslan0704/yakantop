@@ -29,6 +29,9 @@ public class CharacterModelVisual : MonoBehaviour
     public string runClipPath = "Models/Running";
     public string jumpClipPath = "Models/Jump";
 
+    [Tooltip("Zipla klibi fizik ziplamasindan uzun; hizlandirarak esitliyoruz.")]
+    public float jumpAnimationSpeed = 1.8f;
+
     [Header("Dances (emote sirasina gore)")]
     public string[] danceClipPaths =
     {
@@ -150,6 +153,11 @@ public class CharacterModelVisual : MonoBehaviour
         idleIndex = AddClip(idleClipPath, looping: true);
         runIndex = AddClip(runClipPath, looping: true);
         jumpIndex = AddClip(jumpClipPath, looping: false);
+
+        if (jumpIndex >= 0)
+        {
+            playables[jumpIndex].SetSpeed(jumpAnimationSpeed);
+        }
 
         foreach (string dancePath in danceClipPaths)
         {
