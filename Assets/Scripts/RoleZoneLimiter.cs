@@ -23,7 +23,7 @@ public class RoleZoneLimiter : MonoBehaviour
     {
         if (playerRole == null) return;
 
-        if (playerHealth != null && playerHealth.isEliminated)
+        if (playerHealth != null && playerHealth.IsEliminated)
         {
             return;
         }

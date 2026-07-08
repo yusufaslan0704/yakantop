@@ -40,7 +40,32 @@ public class GameManager : MonoBehaviour
             saverStartPosition = saverPlayer.transform.position;
         }
 
+        if (runnerHealth != null)
+        {
+            runnerHealth.OnEliminated += HandleRunnerEliminated;
+            runnerHealth.OnRevived += HandleRunnerRevived;
+        }
+
+        if (saverHealth != null)
+        {
+            saverHealth.OnEliminated += HandleSaverEliminated;
+        }
+
         StartRound();
+    }
+
+    void OnDestroy()
+    {
+        if (runnerHealth != null)
+        {
+            runnerHealth.OnEliminated -= HandleRunnerEliminated;
+            runnerHealth.OnRevived -= HandleRunnerRevived;
+        }
+
+        if (saverHealth != null)
+        {
+            saverHealth.OnEliminated -= HandleSaverEliminated;
+        }
     }
 
     void Update()
@@ -64,31 +89,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        CheckReviveState();
-    }
-
-    void CheckReviveState()
-    {
-        if (runnerHealth == null) return;
-
-        if (runnerHealth.isEliminated && !reviveCountdownActive)
-        {
-            StartReviveCountdown();
-        }
-
-        if (!runnerHealth.isEliminated && reviveCountdownActive)
-        {
-            StopReviveCountdown();
-        }
-
-        if (runnerHealth.isEliminated &&
-            saverHealth != null &&
-            saverHealth.isEliminated)
-        {
-            LoseGame();
-            return;
-        }
-
+        // Süreye bağlı tek iş: revive geri sayımı.
         if (reviveCountdownActive)
         {
             reviveCountdown -= Time.deltaTime;
@@ -97,6 +98,37 @@ public class GameManager : MonoBehaviour
             {
                 LoseGame();
             }
+        }
+    }
+
+    void HandleRunnerEliminated()
+    {
+        if (gameEnded) return;
+
+        // İkisi de elendiyse oyun biter, geri sayıma gerek yok.
+        if (saverHealth != null && saverHealth.IsEliminated)
+        {
+            LoseGame();
+            return;
+        }
+
+        StartReviveCountdown();
+    }
+
+    void HandleRunnerRevived()
+    {
+        if (gameEnded) return;
+
+        StopReviveCountdown();
+    }
+
+    void HandleSaverEliminated()
+    {
+        if (gameEnded) return;
+
+        if (runnerHealth != null && runnerHealth.IsEliminated)
+        {
+            LoseGame();
         }
     }
 

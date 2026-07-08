@@ -84,7 +84,7 @@ public class ThrowerBot : MonoBehaviour
     {
         if (playerThrow == null) return;
 
-        if (playerHealth != null && playerHealth.isEliminated)
+        if (playerHealth != null && playerHealth.IsEliminated)
         {
             return;
         }
@@ -152,11 +152,11 @@ public class ThrowerBot : MonoBehaviour
     {
         bool runnerAvailable = runnerTarget != null &&
                                runnerHealth != null &&
-                               !runnerHealth.isEliminated;
+                               !runnerHealth.IsEliminated;
 
         bool saverAvailable = saverTarget != null &&
                               saverHealth != null &&
-                              !saverHealth.isEliminated;
+                              !saverHealth.IsEliminated;
 
         if (runnerAvailable)
         {

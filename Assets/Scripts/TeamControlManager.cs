@@ -11,9 +11,6 @@ public class TeamControlManager : MonoBehaviour
     public Transform mainCameraTransform;
 
     private PlayerHealth runnerHealth;
-    private PlayerHealth saverHealth;
-
-    private bool controllingSaver = false;
 
     void Start()
     {
@@ -22,35 +19,27 @@ public class TeamControlManager : MonoBehaviour
             runnerHealth = runnerPlayer.GetComponent<PlayerHealth>();
         }
 
-        if (saverPlayer != null)
+        // Runner elendiğinde kontrol Saver'a, kurtarıldığında geri Runner'a geçer.
+        if (runnerHealth != null)
         {
-            saverHealth = saverPlayer.GetComponent<PlayerHealth>();
+            runnerHealth.OnEliminated += SwitchToSaver;
+            runnerHealth.OnRevived += SwitchToRunner;
         }
 
         SwitchToRunner();
     }
 
-    void Update()
+    void OnDestroy()
     {
-        if (runnerHealth == null || saverHealth == null) return;
-
-        // Runner elendiyse kontrol Saver'a geçsin.
-        if (runnerHealth.isEliminated && !controllingSaver)
+        if (runnerHealth != null)
         {
-            SwitchToSaver();
-        }
-
-        // Runner revive olduysa kontrol tekrar Runner'a dönsün.
-        if (!runnerHealth.isEliminated && controllingSaver)
-        {
-            SwitchToRunner();
+            runnerHealth.OnEliminated -= SwitchToSaver;
+            runnerHealth.OnRevived -= SwitchToRunner;
         }
     }
 
     void SwitchToRunner()
     {
-        controllingSaver = false;
-
         SetControl(runnerPlayer, true);
         SetControl(saverPlayer, false);
 
@@ -64,8 +53,6 @@ public class TeamControlManager : MonoBehaviour
 
     void SwitchToSaver()
     {
-        controllingSaver = true;
-
         SetControl(runnerPlayer, false);
         SetControl(saverPlayer, true);
 

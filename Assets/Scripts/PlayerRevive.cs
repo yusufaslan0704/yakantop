@@ -20,16 +20,24 @@ public class PlayerRevive : MonoBehaviour
     private PlayerRole playerRole;
     private PlayerHealth playerHealth;
 
+    private PlayerHealth[] allPlayers;
+
     void Awake()
     {
         playerRole = GetComponent<PlayerRole>();
         playerHealth = GetComponent<PlayerHealth>();
     }
 
+    void Start()
+    {
+        // Oyuncular oyun sırasında değişmediği için sahneyi bir kez tarıyoruz.
+        allPlayers = FindObjectsByType<PlayerHealth>(FindObjectsSortMode.None);
+    }
+
     void Update()
     {
         // Elenen oyuncu revive yapamaz.
-        if (playerHealth != null && playerHealth.isEliminated)
+        if (playerHealth != null && playerHealth.IsEliminated)
         {
             ResetReviveProgress();
             return;
@@ -82,9 +90,9 @@ public class PlayerRevive : MonoBehaviour
     {
         targetToRevive = null;
 
-        PlayerHealth[] players = FindObjectsByType<PlayerHealth>(FindObjectsSortMode.None);
+        if (allPlayers == null) return;
 
-        foreach (PlayerHealth player in players)
+        foreach (PlayerHealth player in allPlayers)
         {
             if (player == null) continue;
 
@@ -92,7 +100,7 @@ public class PlayerRevive : MonoBehaviour
             if (player == playerHealth) continue;
 
             // Sadece elenmiş oyuncular revive edilebilir.
-            if (!player.isEliminated) continue;
+            if (!player.IsEliminated) continue;
 
             float distance = Vector3.Distance(transform.position, player.transform.position);
 

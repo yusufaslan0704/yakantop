@@ -34,7 +34,7 @@ public class PlayerThrow : MonoBehaviour
     void Update()
     {
         // Elenen oyuncu top atamaz.
-        if (playerHealth != null && playerHealth.isEliminated)
+        if (playerHealth != null && playerHealth.IsEliminated)
         {
             isCharging = false;
             return;
@@ -138,7 +138,7 @@ public class PlayerThrow : MonoBehaviour
     public void BotThrowAt(Vector3 targetPosition, float force, GameObject customBallPrefab)
     {
         // Elenen bot top atamaz.
-        if (playerHealth != null && playerHealth.isEliminated)
+        if (playerHealth != null && playerHealth.IsEliminated)
         {
             return;
         }

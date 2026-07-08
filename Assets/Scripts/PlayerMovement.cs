@@ -28,7 +28,7 @@ public class PlayerMovement : MonoBehaviour
 		// Input'u Update'te okuyoruz, fiziksel hareketi FixedUpdate'te uyguluyoruz.
 		moveDirection = Vector3.zero;
 
-		if (playerHealth != null && playerHealth.isEliminated)
+		if (playerHealth != null && playerHealth.IsEliminated)
 		{
 			return;
 		}
