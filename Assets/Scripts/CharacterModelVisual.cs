@@ -40,12 +40,21 @@ public class CharacterModelVisual : MonoBehaviour
         "Models/Slide Hip Hop Dance"
     };
 
+    [Header("Dash Lean")]
+    [Tooltip("Dash sirasinda modelin one egilme acisi (derece).")]
+    public float dashLeanAngle = 16f;
+    public float dashLeanSpeed = 14f;
+
     [Header("Ground Check")]
     public float groundCheckDistance = 1.15f;
 
     private Rigidbody rb;
     private PlayerHealth playerHealth;
     private PlayerEmote playerEmote;
+    private PlayerDash playerDash;
+
+    private Transform modelTransform;
+    private float currentLean;
 
     private PlayableGraph graph;
     private AnimationMixerPlayable mixer;
@@ -68,6 +77,7 @@ public class CharacterModelVisual : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         playerHealth = GetComponent<PlayerHealth>();
         playerEmote = GetComponent<PlayerEmote>();
+        playerDash = GetComponent<PlayerDash>();
     }
 
     void OnEnable()
@@ -106,6 +116,8 @@ public class CharacterModelVisual : MonoBehaviour
         instance.transform.localPosition = new Vector3(0f, modelYOffset, 0f);
         instance.transform.localRotation = Quaternion.identity;
         instance.transform.localScale = modelPrefab.transform.localScale * modelScale;
+
+        modelTransform = instance.transform;
 
         Animator animator = instance.GetComponentInChildren<Animator>();
 
@@ -230,6 +242,18 @@ public class CharacterModelVisual : MonoBehaviour
 
         UpdateWeights(targetIndex);
         LoopClips();
+        UpdateDashLean();
+    }
+
+    // Dash sirasinda model one egilir: hiz hissi verir, kayma "bilinçli" gorunur.
+    void UpdateDashLean()
+    {
+        if (modelTransform == null) return;
+
+        float targetLean = playerDash != null && playerDash.IsDashing() ? dashLeanAngle : 0f;
+
+        currentLean = Mathf.Lerp(currentLean, targetLean, dashLeanSpeed * Time.deltaTime);
+        modelTransform.localRotation = Quaternion.Euler(currentLean, 0f, 0f);
     }
 
     int ChooseState()

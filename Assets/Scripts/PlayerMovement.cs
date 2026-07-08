@@ -12,6 +12,9 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 moveDirection;
 
+    // Dash gibi sistemler oyuncunun o an basmak istedigi yonu okuyabilsin.
+    public Vector3 CurrentMoveDirection { get { return moveDirection; } }
+
     private Rigidbody rb;
     private PlayerHealth playerHealth;
     private PlayerDash playerDash;
