@@ -24,11 +24,13 @@ public class PlayerThrow : MonoBehaviour
 
     private PlayerHealth playerHealth;
     private PlayerRole playerRole;
+    private PlayerInputHandler inputHandler;
 
     void Awake()
     {
         playerHealth = GetComponent<PlayerHealth>();
         playerRole = GetComponent<PlayerRole>();
+        inputHandler = GetComponent<PlayerInputHandler>();
     }
 
     void Update()
@@ -60,14 +62,21 @@ public class PlayerThrow : MonoBehaviour
             return;
         }
 
-        // Sol tıka basınca charge başlar.
-        if (Input.GetMouseButtonDown(0))
+        // Atis girisi: handler varsa oradan (sol tik / gamepad RT), yoksa eski usul fare.
+        bool chargeStarted = inputHandler != null
+            ? inputHandler.ThrowPressed
+            : Input.GetMouseButtonDown(0);
+
+        bool chargeReleased = inputHandler != null
+            ? inputHandler.ThrowReleased
+            : Input.GetMouseButtonUp(0);
+
+        if (chargeStarted)
         {
             StartCharge();
         }
 
-        // Sol tık bırakılınca top atılır.
-        if (Input.GetMouseButtonUp(0) && isCharging)
+        if (chargeReleased && isCharging)
         {
             ReleaseThrow();
         }
@@ -107,12 +116,39 @@ public class PlayerThrow : MonoBehaviour
             return;
         }
 
-        if (playerCamera == null)
+        Vector3 throwDirection = GetThrowDirection();
+
+        if (throwDirection == Vector3.zero)
         {
-            Debug.LogWarning("Player Camera atanmadı!");
             return;
         }
 
+        SpawnAndThrowBall(ballData, throwDirection, force);
+
+        RotatePlayerToThrowDirection(throwDirection);
+    }
+
+    Vector3 GetThrowDirection()
+    {
+        // Gamepad oyuncusu fareyle nisan alamaz: karakterin baktigi yone atar.
+        bool useForwardAim = inputHandler != null &&
+                             inputHandler.scheme == ControlScheme.Gamepad;
+
+        if (useForwardAim || playerCamera == null)
+        {
+            Vector3 forward = transform.forward;
+            forward.y = 0f;
+
+            if (forward == Vector3.zero)
+            {
+                return Vector3.zero;
+            }
+
+            // Hafif yukari egim: top yercekimiyle dusmeden hedefe ulassin.
+            return (forward.normalized + Vector3.up * 0.08f).normalized;
+        }
+
+        // Klavye+fare: ekranin ortasindaki crosshair'e dogru atis.
         Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
         Vector3 targetPoint;
@@ -126,11 +162,7 @@ public class PlayerThrow : MonoBehaviour
             targetPoint = ray.GetPoint(aimDistance);
         }
 
-        Vector3 throwDirection = (targetPoint - throwPoint.position).normalized;
-
-        SpawnAndThrowBall(ballData, throwDirection, force);
-
-        RotatePlayerToThrowDirection(throwDirection);
+        return (targetPoint - throwPoint.position).normalized;
     }
 
     // Bot atışı: atış gücü ve top tipi BallData'dan gelir.

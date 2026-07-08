@@ -26,11 +26,13 @@ public class PlayerDash : MonoBehaviour
 
     private Rigidbody rb;
     private PlayerHealth playerHealth;
+    private PlayerInputHandler inputHandler;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         playerHealth = GetComponent<PlayerHealth>();
+        inputHandler = GetComponent<PlayerInputHandler>();
     }
 
     void Update()
@@ -49,8 +51,12 @@ public class PlayerDash : MonoBehaviour
             return;
         }
 
-        // Sol Shift ile dash.
-        if (Input.GetKeyDown(KeyCode.LeftShift) && Time.time >= nextDashTime && !isDashing)
+        // Dash girisi: handler varsa oradan (klavye Shift / gamepad RB), yoksa eski usul.
+        bool dashInput = inputHandler != null
+            ? inputHandler.DashPressed
+            : Input.GetKeyDown(KeyCode.LeftShift);
+
+        if (dashInput && Time.time >= nextDashTime && !isDashing)
         {
             StartDash();
         }

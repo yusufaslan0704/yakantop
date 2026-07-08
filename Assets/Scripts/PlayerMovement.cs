@@ -15,12 +15,14 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody rb;
     private PlayerHealth playerHealth;
     private PlayerDash playerDash;
+    private PlayerInputHandler inputHandler;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         playerHealth = GetComponent<PlayerHealth>();
         playerDash = GetComponent<PlayerDash>();
+        inputHandler = GetComponent<PlayerInputHandler>();
     }
 
     void Update()
@@ -44,8 +46,21 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
+        float horizontal;
+        float vertical;
+
+        // Girdi PlayerInputHandler'dan gelir (klavye veya gamepad).
+        // Handler yoksa eski usul klavye okunur.
+        if (inputHandler != null)
+        {
+            horizontal = inputHandler.MoveInput.x;
+            vertical = inputHandler.MoveInput.y;
+        }
+        else
+        {
+            horizontal = Input.GetAxisRaw("Horizontal");
+            vertical = Input.GetAxisRaw("Vertical");
+        }
 
         Vector3 inputDirection = new Vector3(horizontal, 0f, vertical);
 

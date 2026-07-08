@@ -167,6 +167,13 @@ public class ThrowerBot : MonoBehaviour
         }
     }
 
+    void OnDisable()
+    {
+        // Bot kapatilirsa (orn. kontrol insana gecerse) uyari rengi takili kalmasin.
+        bool eliminated = playerHealth != null && playerHealth.IsEliminated;
+        CancelTelegraph(restoreColor: !eliminated);
+    }
+
     void ThrowSelectedBall()
     {
         BallData selectedBall = ChooseBallData();

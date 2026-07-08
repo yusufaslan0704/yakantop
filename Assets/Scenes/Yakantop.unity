@@ -1821,6 +1821,7 @@ GameObject:
   - component: {fileID: 892651422}
   - component: {fileID: 892651424}
   - component: {fileID: 892651425}
+  - component: {fileID: 892651500}
   m_Layer: 0
   m_Name: RunnerPlayer
   m_TagString: Player
@@ -2227,6 +2228,8 @@ GameObject:
   - component: {fileID: 985860499}
   - component: {fileID: 985860498}
   - component: {fileID: 985860511}
+  - component: {fileID: 985860600}
+  - component: {fileID: 985860601}
   m_Layer: 0
   m_Name: ThrowerPlayer
   m_TagString: Player
@@ -3235,6 +3238,7 @@ GameObject:
   - component: {fileID: 1459117598}
   - component: {fileID: 1459117596}
   - component: {fileID: 1459117595}
+  - component: {fileID: 1459117700}
   m_Layer: 0
   m_Name: SaverPlayer
   m_TagString: Player
@@ -4804,6 +4808,63 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   isEliminated: 0
+--- !u!114 &892651500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 892651412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7b310ca95fd4d3d877dd6916253c100, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInputHandler
+  scheme: 0
+  gamepadIndex: 0
+  stickDeadzone: 0.15
+--- !u!114 &1459117700
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1459117594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7b310ca95fd4d3d877dd6916253c100, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInputHandler
+  scheme: 0
+  gamepadIndex: 0
+  stickDeadzone: 0.15
+--- !u!114 &985860600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 985860497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7b310ca95fd4d3d877dd6916253c100, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInputHandler
+  scheme: 1
+  gamepadIndex: 0
+  stickDeadzone: 0.15
+--- !u!114 &985860601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 985860497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6cd8e4525a5446eaccf9408f6d70652, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ThrowerHumanControl
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

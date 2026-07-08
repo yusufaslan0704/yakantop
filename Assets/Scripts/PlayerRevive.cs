@@ -19,6 +19,7 @@ public class PlayerRevive : MonoBehaviour
 
     private PlayerRole playerRole;
     private PlayerHealth playerHealth;
+    private PlayerInputHandler inputHandler;
 
     private PlayerHealth[] allPlayers;
 
@@ -26,6 +27,7 @@ public class PlayerRevive : MonoBehaviour
     {
         playerRole = GetComponent<PlayerRole>();
         playerHealth = GetComponent<PlayerHealth>();
+        inputHandler = GetComponent<PlayerInputHandler>();
     }
 
     void Start()
@@ -59,7 +61,12 @@ public class PlayerRevive : MonoBehaviour
 
         FindReviveTarget();
 
-        if (targetToRevive != null && Input.GetKey(KeyCode.F))
+        // Revive girisi: handler varsa oradan (klavye F / gamepad A), yoksa eski usul.
+        bool reviveInput = inputHandler != null
+            ? inputHandler.ReviveHeld
+            : Input.GetKey(KeyCode.F);
+
+        if (targetToRevive != null && reviveInput)
         {
             reviveProgress += Time.deltaTime;
 
