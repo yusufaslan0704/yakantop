@@ -20,11 +20,11 @@
 
 | ID | Öncelik | Bug | Etki | Öneri |
 |----|---------|-----|------|--------|
-| BUG-003 | P1 | `RunnerCharacter.fbx` rig’siz (statik mesh) | Runner’da gerçek animasyon yok; Mixamo fallback’e düşülüyor | Rig’li FBX export et veya custom modeli animasyonlu hale getir |
-| BUG-004 | P2 | BallData `throwSfx` / `hitSfx` null | Per-ball ses yok (global AudioManager çalışıyor) | BallData asset’lerine SFX ata |
-| BUG-005 | P2 | Sahne stale alanlar: `runnerPlayer`, `saverPlayer`, `runnerTarget`, `saverTarget` | Inspector kafa karışıklığı; runtime’da `PlayerManager` kullanılıyor | Sahne YAML temizliği |
-| BUG-006 | P2 | `InputSystem_Actions.inputactions` bağlı değil | Custom `PlayerInputHandler` polling kullanılıyor | Ya bağla ya dokümante et / kaldır |
-| BUG-007 | P1 | Batch build bu oturumda alınamadı (Editor kilitli) | CI/smoke build doğrulanamadı | **Day 7:** Windows smoke build başarılı |
+| BUG-003 | P1 | ~~`RunnerCharacter.fbx` rig’siz~~ | — | **Kapandı:** Mixamo-rig’li Runner + Saver FBX entegre (Humanoid) |
+| BUG-004 | P2 | ~~BallData `throwSfx` / `hitSfx` null~~ | — | **Kapandı:** tüm BallData SFX dolu; Fast/Curve → `SFX_ThrowAlt` |
+| BUG-005 | P2 | ~~Sahne stale alanlar~~ | — | **Kapandı:** `Yakantop.unity` içinde `runnerPlayer`/`saverPlayer`/`*Target` yok |
+| BUG-006 | P2 | `InputSystem_Actions.inputactions` bağlı değil | Custom polling kullanılıyor | Dokümante: `Docs/InputSystem_Actions_Note.md` |
+| BUG-007 | P1 | Batch build bu oturumda alınamadı (Editor kilitli) | CI/smoke build doğrulanamadı | **Day 7 + Day 11:** Windows smoke build |
 | BUG-008 | P2 | RunnerBot sadece wander | Solo test zayıf | **Day 6:** tehdit kaçışı + SafeZone |
 | BUG-009 | P2 | Saver AI yok | Solo tam maç zor | **Day 6:** `SaverBot` eklendi |
 | BUG-010 | P2 | Dodge cooldown UI yok | Oyuncu dodge hazır mı bilmiyor | **Day 4:** `DodgeCooldownUI` |

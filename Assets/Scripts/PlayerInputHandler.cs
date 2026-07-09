@@ -24,6 +24,9 @@ public class PlayerInputHandler : MonoBehaviour
     public Vector2 MoveInput { get; private set; }
     public bool DashPressed { get; private set; }
     public bool DodgePressed { get; private set; }
+    public bool FlashPressed { get; private set; }
+    public bool ShieldPressed { get; private set; }
+    public bool InvisibilityPressed { get; private set; }
     public bool ThrowPressed { get; private set; }
     public bool ThrowReleased { get; private set; }
     public bool ReviveHeld { get; private set; }
@@ -67,6 +70,9 @@ public class PlayerInputHandler : MonoBehaviour
 
         DashPressed = keyboard.leftShiftKey.wasPressedThisFrame;
         DodgePressed = keyboard.qKey.wasPressedThisFrame;
+        FlashPressed = keyboard.eKey.wasPressedThisFrame;
+        ShieldPressed = keyboard.gKey.wasPressedThisFrame;
+        InvisibilityPressed = keyboard.vKey.wasPressedThisFrame;
         ReviveHeld = keyboard.fKey.isPressed;
 
         JumpPressed = keyboard.spaceKey.wasPressedThisFrame;
@@ -109,6 +115,15 @@ public class PlayerInputHandler : MonoBehaviour
         // Dodge: LB (dash'ten ayri).
         DodgePressed = gamepad.leftShoulder.wasPressedThisFrame;
 
+        // Flash: Y / Triangle.
+        FlashPressed = gamepad.buttonNorth.wasPressedThisFrame;
+
+        // Shield: right stick click.
+        ShieldPressed = gamepad.rightStickButton.wasPressedThisFrame;
+
+        // Invisibility: left stick click.
+        InvisibilityPressed = gamepad.leftStickButton.wasPressedThisFrame;
+
         // Atis: RT veya X (basili tut = sarj, birak = at).
         ThrowPressed = gamepad.rightTrigger.wasPressedThisFrame ||
                        gamepad.buttonWest.wasPressedThisFrame;
@@ -147,6 +162,9 @@ public class PlayerInputHandler : MonoBehaviour
         MoveInput = Vector2.zero;
         DashPressed = false;
         DodgePressed = false;
+        FlashPressed = false;
+        ShieldPressed = false;
+        InvisibilityPressed = false;
         ThrowPressed = false;
         ThrowReleased = false;
         ReviveHeld = false;

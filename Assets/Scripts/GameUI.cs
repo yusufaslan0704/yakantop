@@ -194,9 +194,14 @@ public class GameUI : MonoBehaviour
         text.color = color;
         text.richText = true;
         text.enableWordWrapping = true;
-        text.outlineWidth = 0.22f;
-        text.outlineColor = UIColorPalette.Outline;
         text.raycastTarget = false;
+
+        // Bazi TMP fontlari outline desteklemez; NRE olmasin.
+        if (text.fontSharedMaterial != null)
+        {
+            text.outlineWidth = 0.22f;
+            text.outlineColor = UIColorPalette.Outline;
+        }
     }
 
     void StyleEndGamePanel()

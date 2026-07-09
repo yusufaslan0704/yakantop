@@ -120,6 +120,17 @@ public class SplitScreenManager : MonoBehaviour
         }
     }
 
+    public bool IsThrowerViewVisible()
+    {
+        return layout == ArenaCameraLayout.Split || layout == ArenaCameraLayout.ThrowerFull;
+    }
+
+    public Camera GetThrowerCamera()
+    {
+        EnsureThrowerCamera();
+        return throwerCamera;
+    }
+
     void ApplySplitScreen()
     {
         runnerTeamCamera.enabled = true;
@@ -218,6 +229,7 @@ public class SplitScreenManager : MonoBehaviour
         throwerCamera = camObject.AddComponent<Camera>();
         throwerCamera.CopyFrom(runnerTeamCamera);
         throwerCamera.depth = runnerTeamCamera.depth + 1;
+        ApplyThrowerInvisibleCulling(throwerCamera);
 
         AudioListener listener = camObject.GetComponent<AudioListener>();
 
@@ -232,6 +244,23 @@ public class SplitScreenManager : MonoBehaviour
         throwerFollow.lockCursor = false;
 
         camObject.AddComponent<CameraShake>();
+    }
+
+    public static void RefreshThrowerCulling()
+    {
+        if (Instance == null || Instance.throwerCamera == null) return;
+        ApplyThrowerInvisibleCulling(Instance.throwerCamera);
+    }
+
+    static void ApplyThrowerInvisibleCulling(Camera cam)
+    {
+        if (cam == null) return;
+
+        int layer = PlayerInvisibility.GetInvisibleLayer();
+        if (layer < 0) return;
+
+        // Atıcı kamerası görünmez karakterleri hiç çizmez.
+        cam.cullingMask &= ~(1 << layer);
     }
 
     void WireRunnerTeamCameraInput(bool lockCursor)

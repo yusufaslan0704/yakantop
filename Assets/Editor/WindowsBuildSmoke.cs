@@ -2,13 +2,25 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
+// Menu: Tools/Windows Smoke Build
 // Batch: -executeMethod WindowsBuildSmoke.Build
 public static class WindowsBuildSmoke
 {
     const string OutputDir = "Builds/WindowsSmoke";
     const string ExeName = "Yakantop.exe";
 
+    [MenuItem("Tools/Windows Smoke Build")]
+    public static void BuildFromMenu()
+    {
+        BuildInternal(exitOnFinish: false);
+    }
+
     public static void Build()
+    {
+        BuildInternal(exitOnFinish: true);
+    }
+
+    static void BuildInternal(bool exitOnFinish)
     {
         try
         {
@@ -22,7 +34,11 @@ public static class WindowsBuildSmoke
             if (scenes.Length == 0)
             {
                 Debug.LogError("[WindowsBuildSmoke] No enabled scenes in Build Settings.");
-                EditorApplication.Exit(2);
+                if (exitOnFinish)
+                {
+                    EditorApplication.Exit(2);
+                }
+
                 return;
             }
 
@@ -48,24 +64,39 @@ public static class WindowsBuildSmoke
 
             if (summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
             {
-                EditorApplication.Exit(1);
+                if (exitOnFinish)
+                {
+                    EditorApplication.Exit(1);
+                }
+
                 return;
             }
 
             if (!File.Exists(exePath))
             {
                 Debug.LogError("[WindowsBuildSmoke] Build reported success but exe missing: " + exePath);
-                EditorApplication.Exit(3);
+                if (exitOnFinish)
+                {
+                    EditorApplication.Exit(3);
+                }
+
                 return;
             }
 
             Debug.Log("[WindowsBuildSmoke] SUCCESS: " + exePath);
-            EditorApplication.Exit(0);
+
+            if (exitOnFinish)
+            {
+                EditorApplication.Exit(0);
+            }
         }
         catch (System.Exception ex)
         {
             Debug.LogError("[WindowsBuildSmoke] Exception: " + ex);
-            EditorApplication.Exit(1);
+            if (exitOnFinish)
+            {
+                EditorApplication.Exit(1);
+            }
         }
     }
 

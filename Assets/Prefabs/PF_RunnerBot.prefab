@@ -248,9 +248,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterModelVisual
   modelResourcePath: Models/RunnerCharacter
-  modelScale: 1
+  modelScale: 250
   useRunnerDefaultModel: 1
-  fallbackToAnimatedIfStatic: 1
+  fallbackToAnimatedIfStatic: 0
   autoFitStaticModel: 1
   modelYOffset: -1
   transitionSpeed: 8

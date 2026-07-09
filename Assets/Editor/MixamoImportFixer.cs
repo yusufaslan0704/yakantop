@@ -14,7 +14,7 @@ public class MixamoImportFixer : AssetPostprocessor
     // Bu sayiyi artirmak tum modellerin yeniden import edilmesini tetikler.
     public override uint GetVersion()
     {
-        return 4;
+        return 11;
     }
 
     void OnPreprocessModel()
@@ -23,9 +23,11 @@ public class MixamoImportFixer : AssetPostprocessor
 
         ModelImporter importer = (ModelImporter)assetImporter;
 
-        // RunnerCharacter: rig varsa Humanoid (Mixamo klipleri calisir),
-        // rig yoksa Generic + animasyon kapali (statik mesh).
-        if (assetPath.Contains("RunnerCharacter"))
+        // Runner/SaverCharacter: cm olcekli Mixamo FBX.
+        // Import scale 1 birak; boyutu runtime modelScale + auto-fit ayarlar.
+        // (globalScale 250 + humanDescription.globalScale 250 cift olcekleyip
+        //  kemikleri kilometrelerce sisiriyordu.)
+        if (assetPath.Contains("RunnerCharacter") || assetPath.Contains("SaverCharacter"))
         {
             if (FbxLooksRigged(assetPath))
             {
@@ -34,6 +36,7 @@ public class MixamoImportFixer : AssetPostprocessor
                 importer.importAnimation = true;
                 importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
                 importer.globalScale = 1f;
+                importer.useFileScale = true;
             }
             else
             {
@@ -41,13 +44,25 @@ public class MixamoImportFixer : AssetPostprocessor
                 importer.importAnimation = false;
                 importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
                 importer.globalScale = 1f;
+                importer.useFileScale = true;
             }
+
+            HumanDescription human = importer.humanDescription;
+            human.human = System.Array.Empty<HumanBone>();
+            human.skeleton = System.Array.Empty<SkeletonBone>();
+            importer.humanDescription = human;
 
             return;
         }
 
         importer.animationType = ModelImporterAnimationType.Human;
         importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+    }
+
+    void OnPostprocessModel(GameObject root)
+    {
+        // no-op: HumanDescription.globalScale Unity 6 API'de yok.
+        // Olcek sadece ModelImporter.globalScale ile yonetilir.
     }
 
     // FBX binary/ascii icinde kemik/skin izi var mi diye hizli bak.
@@ -144,43 +159,99 @@ public class MixamoImportFixer : AssetPostprocessor
     }
 }
 
-// RunnerCharacter henuz import edilmediyse (Resources.Load null doner) otomatik tetikler.
+// Runner/SaverCharacter henuz import edilmediyse veya Humanoid map bos ise otomatik tetikler.
 [InitializeOnLoad]
-static class RunnerCharacterImportEnsurer
+static class RoleCharacterImportEnsurer
 {
-    const string ModelPath = "Assets/Resources/Models/RunnerCharacter.fbx";
+    static readonly string[] ModelPaths =
+    {
+        "Assets/Resources/Models/RunnerCharacter.fbx",
+        "Assets/Resources/Models/SaverCharacter.fbx"
+    };
 
-    static RunnerCharacterImportEnsurer()
+    static RoleCharacterImportEnsurer()
     {
         EditorApplication.delayCall += EnsureImported;
     }
 
     static void EnsureImported()
     {
-        if (!File.Exists(ModelPath))
+        foreach (string modelPath in ModelPaths)
         {
-            return;
+            if (!File.Exists(modelPath))
+            {
+                continue;
+            }
+
+            Object[] assets = AssetDatabase.LoadAllAssetsAtPath(modelPath);
+            bool hasMesh = false;
+            bool hasAvatar = false;
+
+            if (assets != null)
+            {
+                foreach (Object asset in assets)
+                {
+                    if (asset is Mesh)
+                    {
+                        hasMesh = true;
+                    }
+
+                    if (asset is Avatar)
+                    {
+                        hasAvatar = true;
+                    }
+                }
+            }
+
+            ModelImporter importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
+            bool needsHuman = importer != null &&
+                              (importer.animationType != ModelImporterAnimationType.Human ||
+                               importer.humanDescription.human == null ||
+                               importer.humanDescription.human.Length == 0);
+
+            bool hipsExploded = false;
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+            if (prefab != null)
+            {
+                Transform hips = FindNamed(prefab.transform, "Hips");
+                if (hips != null)
+                {
+                    float hipY = Mathf.Abs(hips.localPosition.y);
+                    if (hipY > 10f)
+                    {
+                        hipsExploded = true;
+                    }
+                }
+            }
+
+            if (!hasMesh || !hasAvatar || needsHuman || hipsExploded)
+            {
+                Debug.Log(modelPath + " force import (mesh=" + hasMesh +
+                          ", avatar=" + hasAvatar +
+                          ", humanFix=" + needsHuman +
+                          ", hipsExploded=" + hipsExploded + ")");
+
+                ForceRunnerCharacterReimport.Reimport(modelPath);
+            }
+        }
+    }
+
+    static Transform FindNamed(Transform root, string token)
+    {
+        if (root.name.Contains(token))
+        {
+            return root;
         }
 
-        Object[] assets = AssetDatabase.LoadAllAssetsAtPath(ModelPath);
-        bool hasMesh = false;
-
-        if (assets != null)
+        for (int i = 0; i < root.childCount; i++)
         {
-            foreach (Object asset in assets)
+            Transform found = FindNamed(root.GetChild(i), token);
+            if (found != null)
             {
-                if (asset is Mesh)
-                {
-                    hasMesh = true;
-                    break;
-                }
+                return found;
             }
         }
 
-        if (!hasMesh)
-        {
-            Debug.Log("RunnerCharacter.fbx import ediliyor...");
-            AssetDatabase.ImportAsset(ModelPath, ImportAssetOptions.ForceUpdate);
-        }
+        return null;
     }
 }

@@ -49,6 +49,16 @@ public class CameraFollow : MonoBehaviour
 
     void ReadLookInput()
     {
+        // Flash: atici bakisi kilitlenir.
+        if (target != null)
+        {
+            PlayerRole role = target.GetComponent<PlayerRole>();
+            if (role != null && role.roleType == RoleType.Thrower && PlayerFlash.AreThrowersBlinded())
+            {
+                return;
+            }
+        }
+
         if (inputHandler != null && inputHandler.scheme == ControlScheme.Gamepad)
         {
             Gamepad gamepad = GetGamepad();

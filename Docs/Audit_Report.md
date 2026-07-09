@@ -58,7 +58,7 @@
 | AudioManager SFX referansları | Throw / Hit / Dash / Revive bağlı |
 | BallData prefab referansları | 5/5 prefab GUID mevcut |
 | Dash / Revive VFX prefab | `PF_DashTrail`, `PF_ReviveComplete` mevcut |
-| Stale serialized alanlar | `runnerPlayer` / `saverPlayer` / `runnerTarget` / `saverTarget` hâlâ YAML’da (kod `PlayerManager` kullanıyor; zararsız drift) |
+| Stale serialized alanlar | ✅ Temiz — `runnerPlayer` / `saverPlayer` / `*Target` sahnede yok |
 
 ---
 

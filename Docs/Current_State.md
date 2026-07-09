@@ -60,10 +60,10 @@ Yerel asimetrik dodgeball prototipi:
 
 ## Bilinen zayıflıklar
 
-1. Custom runner rig’siz → animasyon için Mixamo fallback  
-2. Online multiplayer yok  
-3. Custom runner rig ertelendi (Mixamo fallback)  
-4. RunnerBot / SaverBot temel AI var (Day 6); derin taktik yok
+1. Thrower hâlâ Mixamo Idle fallback (özel Thrower FBX yok)
+2. Online multiplayer yok
+3. RunnerBot / SaverBot temel AI var (Day 6); derin taktik yok
+4. `InputSystem_Actions` bağlı değil — polling bilinçli (`Docs/InputSystem_Actions_Note.md`)
 
 ---
 
@@ -73,16 +73,19 @@ Yerel asimetrik dodgeball prototipi:
 - Canvas scale fix  
 - Revive log spam temizliği  
 - Dokümanlar: `Audit_Report.md`, `Bug_List.md`, `Missing_Assets_List.md`, `Current_State.md`
+- Day 10 yetenekler + Runner/Saver custom model
+- BallData per-ball SFX çeşitliliği (Fast/Curve → ThrowAlt)
+- BUG-003/004/005 kapatıldı
 
 ---
 
 ## Hemen yapılacak doğrulama
 
-1. Unity’de sahneyi kaydet / yeniden aç (Canvas scale değişti)  
+1. Unity’de sahneyi kaydet / yeniden aç  
 2. Console Clear → Play  
-3. Lobby → Start → HUD görünüyor mu?  
-4. Kırmızı error var mı?  
-5. (Opsiyonel) Editor’ü kapatıp Windows build al
+3. Lobby → Start → Runner + Saver modelleri görünüyor mu?  
+4. Flash / Shield / Invis + top sesleri  
+5. (Opsiyonel) **Tools → Windows Smoke Build**
 
 ---
 
@@ -93,4 +96,6 @@ Yerel asimetrik dodgeball prototipi:
 | `Docs/Audit_Report.md` | Tam audit özeti |
 | `Docs/Bug_List.md` | Açık / kapalı buglar |
 | `Docs/Missing_Assets_List.md` | Asset eksikleri |
+| `Docs/Day10_Abilities_Flash_Shield.md` | Flash / Shield / Invis |
+| `Docs/InputSystem_Actions_Note.md` | Input actions bilinçli unused |
 | `Docs/Current_State.md` | Bu dosya — güncel durum |

@@ -86,12 +86,6 @@ public class Ball : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        // Topu atan kisiye carparsa hicbir sey yapma.
-        if (owner != null && collision.gameObject.transform.root == owner.transform.root)
-        {
-            return;
-        }
-
         Vector3 hitPoint = transform.position;
 
         if (collision.contacts.Length > 0)
@@ -121,6 +115,14 @@ public class Ball : MonoBehaviour
             return;
         }
 
+        // Atan kisiye carptiysa yok say.
+        // NOT: transform.root KULLANMA — tum oyuncular "Players" klasoru altinda,
+        // root ayni olunca kimse vurulmuyordu.
+        if (IsOwnedBy(playerHealth))
+        {
+            return;
+        }
+
         // Oyuncu zaten elenmisse veya round bittiyse tekrar vurma, skor verme.
         if (playerHealth.IsEliminated || !GameManager.RoundIsActive)
         {
@@ -137,11 +139,22 @@ public class Ball : MonoBehaviour
             return;
         }
 
-        PlayerDodge dodge = playerHealth.GetComponent<PlayerDodge>();
-
-        if (dodge != null && dodge.IsDodgeActive)
+        // Kalkan balonu: 1 kez topu emer, oyuncu elenmez.
+        PlayerShield shield = playerHealth.GetComponent<PlayerShield>();
+        if (shield != null && shield.enabled && shield.TryConsumeShield(this))
         {
-            DeflectFromPlayer(playerHealth, dodge, collision);
+            SpawnHitEffect(transform.position);
+            ShakeCamera(environmentHitShakeDuration, environmentHitShakeStrength * 0.85f);
+            Destroy(gameObject);
+            return;
+        }
+
+        // Anlik parry: sadece o oyuncu Q'ya tam carpma aninda basarsa.
+        PlayerDodge dodge = playerHealth.GetComponent<PlayerDodge>();
+        if (dodge != null && dodge.enabled && dodge.TryConsumeParry(this))
+        {
+            SpawnHitEffect(transform.position);
+            ShakeCamera(environmentHitShakeDuration, environmentHitShakeStrength * 0.7f);
             return;
         }
 
@@ -150,38 +163,19 @@ public class Ball : MonoBehaviour
         Destroy(gameObject);
     }
 
-    void DeflectFromPlayer(PlayerHealth playerHealth, PlayerDodge dodge, Collision collision)
+    bool IsOwnedBy(PlayerHealth playerHealth)
     {
-        if (rb == null)
+        if (owner == null || playerHealth == null)
         {
-            Destroy(gameObject);
-            return;
+            return false;
         }
 
-        dodge.OnBallDeflected();
+        Transform hit = playerHealth.transform;
+        Transform thrower = owner.transform;
 
-        Vector3 deflectDirection = transform.position - playerHealth.transform.position;
-        deflectDirection.y = 0.15f;
-
-        if (deflectDirection.sqrMagnitude < 0.01f)
-        {
-            deflectDirection = -playerHealth.transform.forward;
-            deflectDirection.y = 0.15f;
-        }
-
-        deflectDirection.Normalize();
-
-        float speed = lastVelocity.magnitude;
-
-        if (speed < 4f)
-        {
-            speed = 12f;
-        }
-
-        rb.linearVelocity = deflectDirection * speed * dodge.deflectSpeedMultiplier;
-
-        SpawnHitEffect(transform.position);
-        CameraShake.ShakeAll(environmentHitShakeDuration, environmentHitShakeStrength * 0.7f);
+        return hit == thrower ||
+               hit.IsChildOf(thrower) ||
+               thrower.IsChildOf(hit);
     }
 
     void HitPlayer(PlayerHealth playerHealth)
@@ -196,6 +190,12 @@ public class Ball : MonoBehaviour
         // Savrulma yonu: toptan oyuncuya dogru, yatay duzlemde.
         Vector3 knockbackDirection = playerHealth.transform.position - transform.position;
         knockbackDirection.y = 0f;
+
+        if (knockbackDirection.sqrMagnitude < 0.0001f)
+        {
+            knockbackDirection = transform.forward;
+        }
+
         knockbackDirection.Normalize();
 
         // Savrulmayi Eliminate'e veriyoruz ki elenme animasyonuyla birlikte islensin.

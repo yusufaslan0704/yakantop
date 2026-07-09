@@ -119,6 +119,9 @@ public class TeamControlManager : MonoBehaviour
         PlayerDuck duck = player.GetComponent<PlayerDuck>();
         PlayerEmote emote = player.GetComponent<PlayerEmote>();
         PlayerDodge dodge = player.GetComponent<PlayerDodge>();
+        PlayerFlash flash = player.GetComponent<PlayerFlash>();
+        PlayerShield shield = player.GetComponent<PlayerShield>();
+        PlayerInvisibility invis = player.GetComponent<PlayerInvisibility>();
 
         // Ayni klavyeyi dinledikleri icin sadece kontrol edilen karakter
         // ziplayip egilebilir ve emote atabilir.
@@ -126,6 +129,9 @@ public class TeamControlManager : MonoBehaviour
         if (duck != null) duck.enabled = isControlled;
         if (emote != null) emote.enabled = isControlled;
         if (dodge != null) dodge.enabled = isControlled;
+        if (flash != null) flash.enabled = isControlled;
+        if (shield != null) shield.enabled = isControlled;
+        if (invis != null) invis.enabled = isControlled;
 
         if (movement != null)
         {

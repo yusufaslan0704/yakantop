@@ -273,6 +273,12 @@ public class PlayerThrow : MonoBehaviour
             targetPoint = ray.GetPoint(aimDistance);
         }
 
+        // Flash: insan atici da isabet kaybeder.
+        if (PlayerFlash.AreThrowersBlinded())
+        {
+            targetPoint += Random.insideUnitSphere * 3.5f;
+        }
+
         return (targetPoint - throwPoint.position).normalized;
     }
 

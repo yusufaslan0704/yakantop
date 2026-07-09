@@ -21,7 +21,7 @@ MonoBehaviour:
   hitShakeStrength: 0.25
   knockbackForce: 4.8
   hitStopDuration: 0.065
-  throwSfx: {fileID: 8300000, guid: 37f8a371cddd6e54f8b1527147952e5c, type: 3}
+  throwSfx: {fileID: 8300000, guid: cccf2a91c05206446952f998794a68a0, type: 3}
   hitSfx: {fileID: 8300000, guid: 9cdf0c7f9f2d4814a921e1568b753b03, type: 3}
   maxBounces: 0
   bounceSpeedKeep: 0.8

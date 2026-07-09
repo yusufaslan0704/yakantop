@@ -140,6 +140,9 @@ GameObject:
   - component: {fileID: 1176234495544528221}
   - component: {fileID: 2434671478459484142}
   - component: {fileID: 910600001}
+  - component: {fileID: 910700003}
+  - component: {fileID: 910700004}
+  - component: {fileID: 910700006}
   m_Layer: 0
   m_Name: PF_Saver
   m_TagString: Player
@@ -523,10 +526,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a76759d63094109ab78283564ba7396, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterModelVisual
-  modelResourcePath: Models/Idle
-  modelScale: 1
+  modelResourcePath: Models/SaverCharacter
+  modelScale: 250
   useRunnerDefaultModel: 1
-  fallbackToAnimatedIfStatic: 1
+  fallbackToAnimatedIfStatic: 0
   autoFitStaticModel: 1
   modelYOffset: -1
   transitionSpeed: 8
@@ -542,7 +545,7 @@ MonoBehaviour:
   jumpClipSkipStart: 0.35
   jumpSpeedMultiplier: 1.15
   throwReleaseNormalizedTime: 0.48
-  dodgeVisualDuration: 0.26
+  dodgeVisualDuration: 0.14
   dodgeClipSkipStart: 0.18
   dodgeClipCutEnd: 0.55
   danceClipPaths:
@@ -564,11 +567,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9b8c7d6e5f432109876543210fedcba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDodge
-  dodgeWindowDuration: 0.32
-  dodgeCooldown: 2.4
-  deflectSpeedMultiplier: 1.05
+  parryTimingSeconds: 0.04
+  cooldownSeconds: 3.2
+  deflectSpeedMultiplier: 1.18
   dodgeShakeDuration: 0.06
-  dodgeShakeStrength: 0.1
+  dodgeShakeStrength: 0.12
+  deflectShakeDuration: 0.1
+  deflectShakeStrength: 0.2
+  dodgeFovPunch: 3.5
 --- !u!114 &910600001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -588,6 +594,57 @@ MonoBehaviour:
   sidestepStrength: 0.55
   idleOrbitRadius: 3.5
   idleRetargetInterval: 2.2
+--- !u!114 &910700003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6887231843595826741}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a64789b0c1d2e3f4a50601, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFlash
+  throwSpeed: 18
+  throwUpSpeed: 3.5
+  fuseTime: 0.55
+  cooldown: 9
+  blindDuration: 2.4
+  shakeDuration: 0.12
+  shakeStrength: 0.18
+--- !u!114 &910700004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6887231843595826741}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a64789b0c1d2e3f4a50602, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerShield
+  activeDuration: 4.5
+  cooldown: 11
+  bubbleRadius: 1.75
+  bubbleHeightScale: 1.15
+  bubbleColor: {r: 0.35, g: 0.85, b: 1, a: 0.08}
+  bubbleRimColor: {r: 0.55, g: 0.95, b: 1, a: 0.18}
+--- !u!114 &910700006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6887231843595826741}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a64789b0c1d2e3f4a50605, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInvisibility
+  duration: 4
+  cooldown: 12
 --- !u!1 &7824444890986446598
 GameObject:
   m_ObjectHideFlags: 0

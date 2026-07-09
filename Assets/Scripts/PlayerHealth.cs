@@ -49,9 +49,22 @@ public class PlayerHealth : MonoBehaviour
 
         for (int i = 0; i < renderers.Length; i++)
         {
-            if (renderers[i] != null)
+            if (renderers[i] == null) continue;
+
+            Material mat = renderers[i].material;
+            if (mat == null) continue;
+
+            if (mat.HasProperty("_BaseColor"))
             {
-                originalColors[i] = renderers[i].material.color;
+                originalColors[i] = mat.GetColor("_BaseColor");
+            }
+            else if (mat.HasProperty("_Color"))
+            {
+                originalColors[i] = mat.GetColor("_Color");
+            }
+            else
+            {
+                originalColors[i] = mat.color;
             }
         }
 
@@ -67,10 +80,23 @@ public class PlayerHealth : MonoBehaviour
 
         foreach (Renderer r in renderers)
         {
-            if (r != null)
+            if (r == null) continue;
+
+            Material mat = r.material;
+            if (mat == null) continue;
+
+            // URP Lit _BaseColor kullanir; eski Standard .color / _Color.
+            if (mat.HasProperty("_BaseColor"))
             {
-                r.material.color = color;
+                mat.SetColor("_BaseColor", color);
             }
+
+            if (mat.HasProperty("_Color"))
+            {
+                mat.SetColor("_Color", color);
+            }
+
+            mat.color = color;
         }
     }
 
@@ -80,10 +106,24 @@ public class PlayerHealth : MonoBehaviour
 
         for (int i = 0; i < renderers.Length; i++)
         {
-            if (renderers[i] != null)
+            if (renderers[i] == null) continue;
+
+            Material mat = renderers[i].material;
+            if (mat == null) continue;
+
+            Color color = originalColors[i];
+
+            if (mat.HasProperty("_BaseColor"))
             {
-                renderers[i].material.color = originalColors[i];
+                mat.SetColor("_BaseColor", color);
             }
+
+            if (mat.HasProperty("_Color"))
+            {
+                mat.SetColor("_Color", color);
+            }
+
+            mat.color = color;
         }
     }
 

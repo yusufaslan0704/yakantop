@@ -106,6 +106,13 @@ public class ThrowerBot : MonoBehaviour
         }
         else if (Time.time >= nextThrowTime)
         {
+            // Flash: bot atisi geciktirir / isabeti bozar.
+            if (PlayerFlash.AreThrowersBlinded())
+            {
+                nextThrowTime = Time.time + 0.35f;
+                return;
+            }
+
             StartTelegraph();
         }
     }
@@ -206,16 +213,39 @@ public class ThrowerBot : MonoBehaviour
 
     // Hedefler artik sahne referansi degil: PlayerManager'dan dinamik secilir.
     // Once hayattaki en yakin Runner, yoksa en yakin Saver.
+    // Gorunmez hedefler atlanir.
     void SelectTarget()
     {
-        PlayerRole target = PlayerManager.GetClosestAlive(RoleType.Runner, transform.position);
+        PlayerRole target = GetClosestVisibleAlive(RoleType.Runner, transform.position);
 
         if (target == null)
         {
-            target = PlayerManager.GetClosestAlive(RoleType.Saver, transform.position);
+            target = GetClosestVisibleAlive(RoleType.Saver, transform.position);
         }
 
         currentTarget = target != null ? target.transform : null;
+    }
+
+    static PlayerRole GetClosestVisibleAlive(RoleType role, Vector3 from)
+    {
+        PlayerRole closest = null;
+        float closestSqr = float.MaxValue;
+
+        foreach (PlayerRole player in PlayerManager.All)
+        {
+            if (player.roleType != role) continue;
+            if (player.Health != null && player.Health.IsEliminated) continue;
+            if (PlayerInvisibility.IsPlayerInvisible(player)) continue;
+
+            float sqr = (player.transform.position - from).sqrMagnitude;
+            if (sqr < closestSqr)
+            {
+                closestSqr = sqr;
+                closest = player;
+            }
+        }
+
+        return closest;
     }
 
     void UpdateTargetVelocity()
@@ -230,8 +260,9 @@ public class ThrowerBot : MonoBehaviour
     Vector3 GetAimPoint()
     {
         Vector3 baseAimPoint = currentTarget.position + Vector3.up * aimHeightOffset;
+        bool blinded = PlayerFlash.AreThrowersBlinded();
 
-        if (usePrediction)
+        if (usePrediction && !blinded)
         {
             Vector3 predictedOffset = targetVelocity * predictionTime;
 
@@ -243,10 +274,16 @@ public class ThrowerBot : MonoBehaviour
             baseAimPoint += predictedOffset;
         }
 
-        if (useAimError)
+        if (useAimError || blinded)
         {
-            Vector2 randomCircle = Random.insideUnitCircle * aimErrorRadius;
-            Vector3 aimError = new Vector3(randomCircle.x, 0f, randomCircle.y);
+            float error = aimErrorRadius;
+            if (blinded)
+            {
+                error = Mathf.Max(error, 4.5f);
+            }
+
+            Vector2 randomCircle = Random.insideUnitCircle * error;
+            Vector3 aimError = new Vector3(randomCircle.x, Random.Range(-0.4f, 0.8f), randomCircle.y);
 
             baseAimPoint += aimError;
         }

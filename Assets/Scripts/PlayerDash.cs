@@ -194,10 +194,8 @@ public class PlayerDash : MonoBehaviour
         Vector3 origin = transform.position + Vector3.up * 0.25f;
         Vector3 right = Vector3.Cross(Vector3.up, dashDirection).normalized;
 
-        SpawnRing(origin, dashDirection);
-
-        // Sadece arkada ve yanlarda; karakterin uzerinde degil.
-        for (int i = 0; i < 4; i++)
+        // Beyaz halka yok; sadece arkada/yanlarda ruzgar cizgileri.
+        for (int i = 0; i < 5; i++)
         {
             float side = Random.Range(-0.9f, 0.9f);
             float back = Random.Range(0.7f, 1.6f);
@@ -206,23 +204,6 @@ public class PlayerDash : MonoBehaviour
             Vector3 streakPos = origin - dashDirection * back + right * side;
             SpawnWindStreak(streakPos, dashDirection, length, 0.03f, 0.14f);
         }
-    }
-
-    void SpawnRing(Vector3 position, Vector3 forward)
-    {
-        GameObject ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        ring.name = "DashRing";
-        ring.transform.position = position;
-        ring.transform.localScale = new Vector3(1.6f, 0.01f, 1.6f);
-        ring.transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
-        Destroy(ring.GetComponent<Collider>());
-
-        Material mat = CreateFadeMaterial(windColor);
-        ring.GetComponent<Renderer>().material = mat;
-
-        DashRingExpand expand = ring.AddComponent<DashRingExpand>();
-        expand.duration = 0.14f;
-        expand.endScale = 2.4f;
     }
 
     void SpawnWindStreak(Vector3 position, Vector3 direction, float length, float thickness, float fadeDuration)

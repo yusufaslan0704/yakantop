@@ -16,15 +16,16 @@ public class CharacterModelVisual : MonoBehaviour
     public string modelResourcePath = "Models/Idle";
     public float modelScale = 1f;
 
-    [Tooltip("Runner rolu icin otomatik ozel model kullan.")]
+    [Tooltip("Runner/Saver icin otomatik ozel model kullan.")]
     public bool useRunnerDefaultModel = true;
 
     [Tooltip("Ozel model rig tasimiyorsa animasyonlu Mixamo modeline don.")]
     public bool fallbackToAnimatedIfStatic = true;
 
     const string RunnerModelPath = "Models/RunnerCharacter";
+    const string SaverModelPath = "Models/SaverCharacter";
 
-    [Tooltip("Statik (rig'siz) modelleri kapsul boyutuna otomatik sigdir.")]
+    [Tooltip("Model boyu kapsulden cok farkliysa (cok kucuk/buyuk FBX) otomatik olcekle.")]
     public bool autoFitStaticModel = true;
 
     [Tooltip("Kapsulun merkezi yerde degil; modelin ayaklari yere degsin diye asagi kaydirma.")]
@@ -61,8 +62,8 @@ public class CharacterModelVisual : MonoBehaviour
     public float throwReleaseNormalizedTime = 0.48f;
 
     [Header("Dodge Visual")]
-    [Tooltip("Dodge animasyonunun ekranda kalma suresi (sn). Kisa tut: tepki hissi icin.")]
-    public float dodgeVisualDuration = 0.26f;
+    [Tooltip("Dodge animasyonunun ekranda kalma suresi (sn). Timing dodge ile kisa tut.")]
+    public float dodgeVisualDuration = 0.14f;
 
     [Tooltip("Klibin basindan atlanacak kisim (0-1). Hazirlik / yavas giris kesilir.")]
     [Range(0f, 0.7f)]
@@ -228,6 +229,11 @@ public class CharacterModelVisual : MonoBehaviour
 
         EnsureMaterials(instance);
 
+        foreach (SkinnedMeshRenderer smr in instance.GetComponentsInChildren<SkinnedMeshRenderer>())
+        {
+            smr.updateWhenOffscreen = true;
+        }
+
         Renderer[] modelRenderers = instance.GetComponentsInChildren<Renderer>();
 
         if (modelRenderers.Length == 0)
@@ -248,6 +254,7 @@ public class CharacterModelVisual : MonoBehaviour
 
         // Hareket fizik tarafindan yonetiliyor; animasyon karakteri kaydirmasin.
         animator.applyRootMotion = false;
+        EnsureAnimatorAvatar(animator, instance);
 
         SkinnedMeshRenderer skinnedMesh = instance.GetComponentInChildren<SkinnedMeshRenderer>();
 
@@ -282,16 +289,30 @@ public class CharacterModelVisual : MonoBehaviour
             skinnedMesh = instance.GetComponentInChildren<SkinnedMeshRenderer>();
         }
 
-        if (skinnedMesh == null)
+        if (autoFitStaticModel)
         {
-            if (autoFitStaticModel)
-            {
-                FitStaticModelToCapsule(instance);
-            }
+            FitModelToCapsule(instance);
         }
-        else
+
+        if (skinnedMesh != null)
         {
             BuildGraph(animator);
+        }
+
+        // Skinned mesh bind/avatar sorunlarinda cull edilmesin.
+        foreach (SkinnedMeshRenderer smr in instance.GetComponentsInChildren<SkinnedMeshRenderer>())
+        {
+            smr.updateWhenOffscreen = true;
+            smr.enabled = true;
+
+            if (smr.sharedMesh != null)
+            {
+                Bounds local = smr.sharedMesh.bounds;
+                if (local.size.y < 0.05f || local.size.y > 50f)
+                {
+                    smr.localBounds = new Bounds(new Vector3(0f, 0.9f, 0f), new Vector3(1.2f, 2f, 1.2f));
+                }
+            }
         }
 
         CharacterAnimator proceduralAnimator = GetComponent<CharacterAnimator>();
@@ -306,7 +327,39 @@ public class CharacterModelVisual : MonoBehaviour
             playerHealth.RefreshRenderers();
         }
 
-        Debug.Log(name + ": karakter modeli yuklendi -> " + modelResourcePath);
+        int rendererCount = instance.GetComponentsInChildren<Renderer>().Length;
+        string matName = "?";
+        Renderer firstRenderer = instance.GetComponentInChildren<Renderer>();
+        if (firstRenderer != null && firstRenderer.sharedMaterial != null)
+        {
+            matName = firstRenderer.sharedMaterial.name;
+        }
+
+        Debug.Log(
+            name + ": karakter modeli yuklendi -> " + modelResourcePath +
+            " scale=" + (modelTransform != null ? modelTransform.localScale.y.ToString("F2") : "?") +
+            " boundY=" + GetModelBoundHeight(instance).ToString("F2") +
+            " renderers=" + rendererCount +
+            " mat=" + matName);
+    }
+
+    static float GetModelBoundHeight(GameObject instance)
+    {
+        Renderer[] renderers = instance.GetComponentsInChildren<Renderer>();
+
+        if (renderers.Length == 0)
+        {
+            return 0f;
+        }
+
+        Bounds bounds = renderers[0].bounds;
+
+        for (int i = 1; i < renderers.Length; i++)
+        {
+            bounds.Encapsulate(renderers[i].bounds);
+        }
+
+        return bounds.size.y;
     }
 
     bool TryInstantiateModel(out GameObject instance)
@@ -354,30 +407,78 @@ public class CharacterModelVisual : MonoBehaviour
 
     void EnsureMaterials(GameObject instance)
     {
+        if (fallbackMaterial == null)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+
+            if (shader == null)
+            {
+                shader = Shader.Find("Standard");
+            }
+
+            fallbackMaterial = new Material(shader)
+            {
+                color = new Color(0.72f, 0.74f, 0.78f, 1f),
+                name = "RoleCharacterFallbackLit"
+            };
+        }
+
         foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>())
         {
-            if (renderer.sharedMaterial != null)
+            Material mat = renderer.sharedMaterial;
+
+            // Bu FBX'lerde Material yok; Unity default/pembe/seffaf birakabiliyor.
+            // Role modellerinde her zaman opak Lit kullan.
+            bool forceRoleFallback =
+                modelResourcePath == RunnerModelPath ||
+                modelResourcePath == SaverModelPath;
+
+            bool needsFallback =
+                forceRoleFallback ||
+                mat == null ||
+                mat.shader == null ||
+                mat.shader.name.Contains("Error") ||
+                mat.name == "Default-Material" ||
+                mat.name.StartsWith("Default", System.StringComparison.Ordinal) ||
+                mat.name.Contains("No Name");
+
+            if (!needsFallback && mat.HasProperty("_BaseColor"))
+            {
+                Color c = mat.GetColor("_BaseColor");
+                if (c.a < 0.05f)
+                {
+                    needsFallback = true;
+                }
+            }
+
+            if (!needsFallback)
             {
                 continue;
             }
 
-            if (fallbackMaterial == null)
-            {
-                Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-
-                if (shader == null)
-                {
-                    shader = Shader.Find("Standard");
-                }
-
-                fallbackMaterial = new Material(shader)
-                {
-                    color = new Color(0.75f, 0.75f, 0.78f, 1f)
-                };
-            }
-
             renderer.sharedMaterial = fallbackMaterial;
+            renderer.enabled = true;
         }
+    }
+
+    static void EnsureAnimatorAvatar(Animator animator, GameObject instance)
+    {
+        if (animator == null)
+        {
+            return;
+        }
+
+        if (animator.avatar != null && animator.avatar.isValid)
+        {
+            return;
+        }
+
+        // Instantiate edilen FBX'te Avatar bazen Animator'a baglanmaz.
+        // Parent hiyerarsisinde Avatar asset referansi yok; bu durumda
+        // Playables Humanoid retarget yapamaz ve mesh bind-pose'da kalir.
+        Debug.LogWarning(
+            (instance != null ? instance.name : "model") +
+            ": Animator avatar eksik/gecersiz. Mesh bind-pose'da kalabilir.");
     }
 
     void ApplyRoleModelDefaults()
@@ -389,16 +490,30 @@ public class CharacterModelVisual : MonoBehaviour
 
         PlayerRole role = GetComponent<PlayerRole>();
 
-        if (role != null && role.roleType == RoleType.Runner)
+        if (role == null)
         {
-            if (fallbackToAnimatedIfStatic && !ModelPrefabHasRig(RunnerModelPath))
-            {
-                modelResourcePath = idleClipPath;
-            }
-            else
-            {
-                modelResourcePath = RunnerModelPath;
-            }
+            return;
+        }
+
+        if (role.roleType == RoleType.Runner)
+        {
+            ApplyRoleModelPath(RunnerModelPath);
+        }
+        else if (role.roleType == RoleType.Saver)
+        {
+            ApplyRoleModelPath(SaverModelPath);
+        }
+    }
+
+    void ApplyRoleModelPath(string preferredPath)
+    {
+        if (fallbackToAnimatedIfStatic && !ModelPrefabHasRig(preferredPath))
+        {
+            modelResourcePath = idleClipPath;
+        }
+        else
+        {
+            modelResourcePath = preferredPath;
         }
     }
 
@@ -422,27 +537,95 @@ public class CharacterModelVisual : MonoBehaviour
         return false;
     }
 
-    void FitStaticModelToCapsule(GameObject instance)
+    void FitModelToCapsule(GameObject instance)
     {
-        Renderer[] renderers = instance.GetComponentsInChildren<Renderer>();
-
-        if (renderers.Length == 0)
+        if (modelTransform == null)
         {
             return;
         }
 
-        Bounds bounds = renderers[0].bounds;
+        const float targetHeight = 1.85f;
 
-        for (int i = 1; i < renderers.Length; i++)
+        // Sadece skinned mesh'leri kullan; FBX'teki yardimci/dev mesh'ler
+        // bound'u sisebilir ve modeli yanlis kucultur.
+        SkinnedMeshRenderer[] skinned = instance.GetComponentsInChildren<SkinnedMeshRenderer>();
+        float height = 0f;
+        Bounds worldBounds = default;
+        bool hasWorld = false;
+
+        foreach (SkinnedMeshRenderer smr in skinned)
         {
-            bounds.Encapsulate(renderers[i].bounds);
+            Bounds b = smr.bounds;
+            if (b.size.y < 1e-6f)
+            {
+                continue;
+            }
+
+            // Asiri buyuk local mesh (yardimci geo) world'de de sisikse atla.
+            if (smr.sharedMesh != null && smr.sharedMesh.bounds.size.y > 20f && b.size.y > 10f)
+            {
+                continue;
+            }
+
+            if (!hasWorld)
+            {
+                worldBounds = b;
+                hasWorld = true;
+            }
+            else
+            {
+                worldBounds.Encapsulate(b);
+            }
         }
 
-        const float targetHeight = 1.85f;
-        float height = bounds.size.y;
+        if (hasWorld)
+        {
+            height = worldBounds.size.y;
+        }
+
+        if (height < 0.05f)
+        {
+            Transform hips = FindChildRecursive(instance.transform, "mixamorig:Hips");
+            if (hips != null)
+            {
+                float hipLocalY = Mathf.Abs(hips.localPosition.y);
+                float hipWorldY = Mathf.Abs(hips.position.y - transform.position.y);
+                float hipHeight = Mathf.Max(hipLocalY * Mathf.Abs(modelTransform.lossyScale.y), hipWorldY);
+                height = Mathf.Max(hipHeight * 1.75f, 0.01f);
+            }
+        }
 
         if (height < 0.01f)
         {
+            // Son care: tum renderer'larin en kucuk makul bound'u.
+            foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>())
+            {
+                float y = renderer.bounds.size.y;
+                if (y > 0.001f && y < 5f)
+                {
+                    height = Mathf.Max(height, y);
+                    if (!hasWorld)
+                    {
+                        worldBounds = renderer.bounds;
+                        hasWorld = true;
+                    }
+                }
+            }
+        }
+
+        if (height < 0.01f)
+        {
+            return;
+        }
+
+        if (height >= 1.2f && height <= 2.4f)
+        {
+            if (hasWorld)
+            {
+                float bottomOffset = worldBounds.min.y - transform.position.y;
+                modelTransform.localPosition = new Vector3(0f, modelYOffset - bottomOffset, 0f);
+            }
+
             return;
         }
 
@@ -450,15 +633,48 @@ public class CharacterModelVisual : MonoBehaviour
         modelTransform.localScale *= scaleFactor;
         baseModelScale = modelTransform.localScale;
 
-        bounds = renderers[0].bounds;
-
-        for (int i = 1; i < renderers.Length; i++)
+        hasWorld = false;
+        foreach (SkinnedMeshRenderer smr in skinned)
         {
-            bounds.Encapsulate(renderers[i].bounds);
+            Bounds b = smr.bounds;
+            if (b.size.y < 1e-6f) continue;
+            if (smr.sharedMesh != null && smr.sharedMesh.bounds.size.y > 20f && b.size.y > 10f) continue;
+
+            if (!hasWorld)
+            {
+                worldBounds = b;
+                hasWorld = true;
+            }
+            else
+            {
+                worldBounds.Encapsulate(b);
+            }
         }
 
-        float bottomOffset = bounds.min.y - transform.position.y;
-        modelTransform.localPosition = new Vector3(0f, modelYOffset - bottomOffset, 0f);
+        if (hasWorld)
+        {
+            float bottomOffset = worldBounds.min.y - transform.position.y;
+            modelTransform.localPosition = new Vector3(0f, modelYOffset - bottomOffset, 0f);
+        }
+    }
+
+    static Transform FindChildRecursive(Transform root, string childName)
+    {
+        if (root.name == childName)
+        {
+            return root;
+        }
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform found = FindChildRecursive(root.GetChild(i), childName);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     void HideOldVisuals(MeshRenderer[] oldRenderers)
@@ -777,17 +993,11 @@ public class CharacterModelVisual : MonoBehaviour
         float endTime = clipLength * endNorm;
         float playLength = Mathf.Max(0.05f, endTime - startTime);
 
-        float visualDuration = dodgeVisualDuration;
-        if (playerDodge != null)
-        {
-            visualDuration = Mathf.Clamp(
-                Mathf.Max(dodgeVisualDuration, playerDodge.dodgeWindowDuration * 0.8f),
-                0.16f,
-                0.36f);
-        }
+        // Parry animasyonu kisa flash; eski uzun dodge penceresine bagli degil.
+        float visualDuration = Mathf.Clamp(dodgeVisualDuration, 0.08f, 0.2f);
 
         float speed = playLength / Mathf.Max(0.08f, visualDuration);
-        speed = Mathf.Clamp(speed, 1.8f, 10f);
+        speed = Mathf.Clamp(speed, 2.5f, 12f);
 
         playables[dodgeIndex].SetTime(startTime);
         playables[dodgeIndex].SetSpeed(speed);
