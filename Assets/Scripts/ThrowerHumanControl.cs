@@ -11,6 +11,7 @@ public class ThrowerHumanControl : MonoBehaviour
 
     private bool humanActive;
     private bool initialized;
+    private bool lobbyOverrideActive;
 
     void Awake()
     {
@@ -21,6 +22,11 @@ public class ThrowerHumanControl : MonoBehaviour
 
     void Update()
     {
+        if (lobbyOverrideActive)
+        {
+            return;
+        }
+
         bool gamepadConnected = HasGamepadForThisPlayer();
 
         if (!initialized || gamepadConnected != humanActive)
@@ -51,8 +57,29 @@ public class ThrowerHumanControl : MonoBehaviour
             movement.enabled = human;
         }
 
+        if (SplitScreenManager.Instance != null)
+        {
+            SplitScreenManager.Instance.RefreshLayout();
+        }
+
         Debug.Log(human
             ? "Gamepad baglandi: Thrower artik 2. oyuncunun kontrolunde."
             : "Gamepad yok: Thrower bot kontrolunde.");
+    }
+
+    // Lobiden gelen zorunlu kontrol modu; gamepad algilamasini devre disi birakir.
+    public void SetLobbyOverride(bool active, bool forceHuman)
+    {
+        lobbyOverrideActive = active;
+
+        if (active)
+        {
+            initialized = true;
+            ApplyControlMode(forceHuman);
+        }
+        else
+        {
+            initialized = false;
+        }
     }
 }

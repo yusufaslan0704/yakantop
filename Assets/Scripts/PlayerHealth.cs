@@ -5,13 +5,13 @@ public class PlayerHealth : MonoBehaviour
 {
     [Header("Elenme Savrulması")]
     [Tooltip("Savrulmaya eklenen yukarı itiş.")]
-    public float flingUpForce = 2.5f;
+    public float flingUpForce = 3.2f;
 
     [Tooltip("Devrilme dönüşü gücü.")]
-    public float flingTorque = 6f;
+    public float flingTorque = 7.5f;
 
     [Tooltip("Savrulduktan kaç saniye sonra yerde donup kalır.")]
-    public float freezeDelay = 1.2f;
+    public float freezeDelay = 1.05f;
 
     public bool IsEliminated { get; private set; }
 
@@ -34,6 +34,8 @@ public class PlayerHealth : MonoBehaviour
 
         if (rb != null)
         {
+            // Y ekseni dahil donmeyi kilitle; yon sadece MoveRotation ile verilir.
+            rb.constraints = RigidbodyConstraints.FreezeRotation;
             originalConstraints = rb.constraints;
         }
     }

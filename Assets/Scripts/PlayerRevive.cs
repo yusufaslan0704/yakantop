@@ -20,20 +20,19 @@ public class PlayerRevive : MonoBehaviour
     private PlayerRole playerRole;
     private PlayerHealth playerHealth;
     private PlayerInputHandler inputHandler;
-
-    private PlayerHealth[] allPlayers;
+    private SaverBot saverBot;
 
     void Awake()
     {
         playerRole = GetComponent<PlayerRole>();
         playerHealth = GetComponent<PlayerHealth>();
         inputHandler = GetComponent<PlayerInputHandler>();
+        saverBot = GetComponent<SaverBot>();
     }
 
     void Start()
     {
-        // Oyuncular oyun sırasında değişmediği için sahneyi bir kez tarıyoruz.
-        allPlayers = FindObjectsByType<PlayerHealth>(FindObjectsSortMode.None);
+        // Hedefler PlayerManager'dan dinamik okunur.
     }
 
     void Update()
@@ -61,16 +60,25 @@ public class PlayerRevive : MonoBehaviour
 
         FindReviveTarget();
 
-        // Revive girisi: handler varsa oradan (klavye F / gamepad A), yoksa eski usul.
-        bool reviveInput = inputHandler != null
-            ? inputHandler.ReviveHeld
-            : Input.GetKey(KeyCode.F);
+        // Revive girisi: insan (F / gamepad) veya SaverBot hold.
+        bool reviveInput = false;
+
+        if (saverBot != null && saverBot.IsHoldingRevive())
+        {
+            reviveInput = true;
+        }
+        else if (inputHandler != null)
+        {
+            reviveInput = inputHandler.ReviveHeld;
+        }
+        else
+        {
+            reviveInput = Input.GetKey(KeyCode.F);
+        }
 
         if (targetToRevive != null && reviveInput)
         {
             reviveProgress += Time.deltaTime;
-
-            Debug.Log("Revive ilerliyor: " + reviveProgress.ToString("F1"));
 
             if (reviveProgress >= reviveHoldTime)
             {
@@ -104,23 +112,17 @@ public class PlayerRevive : MonoBehaviour
     {
         targetToRevive = null;
 
-        if (allPlayers == null) return;
-
-        foreach (PlayerHealth player in allPlayers)
+        foreach (PlayerRole player in PlayerManager.All)
         {
-            if (player == null) continue;
-
-            // Kendini revive etmeye çalışma.
-            if (player == playerHealth) continue;
-
-            // Sadece elenmiş oyuncular revive edilebilir.
-            if (!player.IsEliminated) continue;
+            if (player == null || player.Health == null) continue;
+            if (player.Health == playerHealth) continue;
+            if (!player.Health.IsEliminated) continue;
 
             float distance = Vector3.Distance(transform.position, player.transform.position);
 
             if (distance <= reviveRange)
             {
-                targetToRevive = player;
+                targetToRevive = player.Health;
                 break;
             }
         }

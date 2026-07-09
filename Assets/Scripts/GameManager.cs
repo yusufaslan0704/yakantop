@@ -9,8 +9,12 @@ public class GameManager : MonoBehaviour
     // Diğer scriptler "oyun oynanabilir durumda mı?" sorusunu buradan sorar.
     public static bool RoundIsActive
     {
-        get { return Instance == null || Instance.roundActive; }
+        get { return Instance != null && Instance.roundActive; }
     }
+
+    [Header("Lobby")]
+    [Tooltip("Açıksa oyun lobiden başlatılana kadar round başlamaz.")]
+    public bool waitForLobbyStart = true;
 
     [Header("Round Settings")]
     public float roundDuration = 60f;
@@ -27,6 +31,7 @@ public class GameManager : MonoBehaviour
     private float reviveCountdown;
 
     private bool roundActive = false;
+    private bool matchStarted = false;
     private bool gameEnded = false;
     private bool playerWon = false;
     private bool reviveCountdownActive = false;
@@ -53,6 +58,11 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        if (waitForLobbyStart && GetComponent<MatchLobbyManager>() == null)
+        {
+            gameObject.AddComponent<MatchLobbyManager>();
+        }
     }
 
     void Start()
@@ -70,7 +80,10 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        StartRound();
+        if (!waitForLobbyStart)
+        {
+            BeginMatch();
+        }
     }
 
     void OnDestroy()
@@ -106,6 +119,12 @@ public class GameManager : MonoBehaviour
                 ResetRound();
             }
 
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.L) && matchEnded && waitForLobbyStart)
+        {
+            ReturnToLobby();
             return;
         }
 
@@ -179,6 +198,43 @@ public class GameManager : MonoBehaviour
         if (reviveCountdownActive && PlayerManager.AnyAlive(RoleType.Runner))
         {
             StopReviveCountdown();
+        }
+    }
+
+    public void BeginMatch()
+    {
+        matchStarted = true;
+        StartRound();
+    }
+
+    public void ReturnToLobby()
+    {
+        runnerTeamWins = 0;
+        throwerTeamWins = 0;
+        matchEnded = false;
+        matchStarted = false;
+        gameEnded = false;
+        roundActive = false;
+        reviveCountdownActive = false;
+
+        if (MatchLobbyManager.Instance != null)
+        {
+            MatchLobbyManager.Instance.ShowLobby();
+        }
+
+        ResetPlayersAndBalls();
+    }
+
+    public bool IsInLobby()
+    {
+        return waitForLobbyStart && !matchStarted;
+    }
+
+    public void RegisterStartPosition(PlayerRole player)
+    {
+        if (player != null)
+        {
+            startPositions[player] = player.transform.position;
         }
     }
 
@@ -265,6 +321,14 @@ public class GameManager : MonoBehaviour
 
     void ResetRound()
     {
+        ResetPlayersAndBalls();
+        StartRound();
+
+        Debug.Log("Round resetlendi!");
+    }
+
+    void ResetPlayersAndBalls()
+    {
         PlayerHealth[] players = FindObjectsByType<PlayerHealth>(FindObjectsSortMode.None);
 
         foreach (PlayerHealth player in players)
@@ -272,7 +336,6 @@ public class GameManager : MonoBehaviour
             player.Revive();
         }
 
-        // Havada kalan toplar yeni round'a taşınmasın.
         Ball[] balls = FindObjectsByType<Ball>(FindObjectsSortMode.None);
 
         foreach (Ball ball in balls)
@@ -280,7 +343,6 @@ public class GameManager : MonoBehaviour
             Destroy(ball.gameObject);
         }
 
-        // Herkes round basindaki yerine doner.
         foreach (KeyValuePair<PlayerRole, Vector3> entry in startPositions)
         {
             if (entry.Key != null)
@@ -288,10 +350,6 @@ public class GameManager : MonoBehaviour
                 entry.Key.transform.position = entry.Value;
             }
         }
-
-        StartRound();
-
-        Debug.Log("Round resetlendi!");
     }
 
     // Skor, elemeyi yapan oyuncuya (topu atana) yazılır.
@@ -339,9 +397,23 @@ public class GameManager : MonoBehaviour
 
     IEnumerator HitStopRoutine(float duration)
     {
-        Time.timeScale = 0.05f;
+        // Ani freeze yerine kisa slow-mo: vurus "oturur", sonra hizla normale doner.
+        float elapsed = 0f;
+        float hold = Mathf.Min(0.035f, duration * 0.45f);
+        float recover = Mathf.Max(0.02f, duration - hold);
 
-        yield return new WaitForSecondsRealtime(duration);
+        Time.timeScale = 0.08f;
+        yield return new WaitForSecondsRealtime(hold);
+
+        while (elapsed < recover)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / recover);
+            // Ease-out cubic
+            t = 1f - Mathf.Pow(1f - t, 3f);
+            Time.timeScale = Mathf.Lerp(0.08f, 1f, t);
+            yield return null;
+        }
 
         Time.timeScale = 1f;
         hitStopRoutine = null;

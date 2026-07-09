@@ -129,9 +129,59 @@ public class Ball : MonoBehaviour
             return;
         }
 
+        // Guvenli cepteki oyuncu vurulamaz; top ona carpip soner.
+        if (SafeZone.IsProtected(playerHealth))
+        {
+            ShakeCamera(environmentHitShakeDuration, environmentHitShakeStrength);
+            Destroy(gameObject);
+            return;
+        }
+
+        PlayerDodge dodge = playerHealth.GetComponent<PlayerDodge>();
+
+        if (dodge != null && dodge.IsDodgeActive)
+        {
+            DeflectFromPlayer(playerHealth, dodge, collision);
+            return;
+        }
+
         HitPlayer(playerHealth);
 
         Destroy(gameObject);
+    }
+
+    void DeflectFromPlayer(PlayerHealth playerHealth, PlayerDodge dodge, Collision collision)
+    {
+        if (rb == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        dodge.OnBallDeflected();
+
+        Vector3 deflectDirection = transform.position - playerHealth.transform.position;
+        deflectDirection.y = 0.15f;
+
+        if (deflectDirection.sqrMagnitude < 0.01f)
+        {
+            deflectDirection = -playerHealth.transform.forward;
+            deflectDirection.y = 0.15f;
+        }
+
+        deflectDirection.Normalize();
+
+        float speed = lastVelocity.magnitude;
+
+        if (speed < 4f)
+        {
+            speed = 12f;
+        }
+
+        rb.linearVelocity = deflectDirection * speed * dodge.deflectSpeedMultiplier;
+
+        SpawnHitEffect(transform.position);
+        CameraShake.ShakeAll(environmentHitShakeDuration, environmentHitShakeStrength * 0.7f);
     }
 
     void HitPlayer(PlayerHealth playerHealth)
@@ -200,11 +250,6 @@ public class Ball : MonoBehaviour
 
     void ShakeCamera(float duration, float strength)
     {
-        if (CameraShake.Instance == null)
-        {
-            return;
-        }
-
-        CameraShake.Instance.Shake(duration, strength);
+        CameraShake.ShakeAll(duration, strength);
     }
 }

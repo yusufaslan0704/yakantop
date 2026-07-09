@@ -19,26 +19,54 @@ public class PlayerDuck : MonoBehaviour
     private Rigidbody rb;
     private PlayerHealth playerHealth;
     private PlayerInputHandler inputHandler;
+    private CharacterAnimator characterAnimator;
+    private CharacterModelVisual characterModelVisual;
+
+    private bool wasDucking;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         playerHealth = GetComponent<PlayerHealth>();
         inputHandler = GetComponent<PlayerInputHandler>();
+        characterAnimator = GetComponent<CharacterAnimator>();
+        characterModelVisual = GetComponent<CharacterModelVisual>();
     }
 
     void Update()
     {
-        IsDucking = GameManager.RoundIsActive &&
-                    inputHandler != null &&
-                    inputHandler.DuckHeld &&
-                    (playerHealth == null || !playerHealth.IsEliminated) &&
-                    !rb.isKinematic;
+        bool ducking = GameManager.RoundIsActive &&
+                       inputHandler != null &&
+                       inputHandler.DuckHeld &&
+                       (playerHealth == null || !playerHealth.IsEliminated) &&
+                       !rb.isKinematic;
+
+        if (wasDucking && !ducking)
+        {
+            ResetVisualPose();
+        }
+
+        wasDucking = ducking;
+        IsDucking = ducking;
     }
 
     void OnDisable()
     {
-        // Kontrol degisiminde egik kalmasin.
         IsDucking = false;
+        wasDucking = false;
+        ResetVisualPose();
+    }
+
+    void ResetVisualPose()
+    {
+        if (characterAnimator != null)
+        {
+            characterAnimator.ResetPose();
+        }
+
+        if (characterModelVisual != null)
+        {
+            characterModelVisual.ResetPose();
+        }
     }
 }

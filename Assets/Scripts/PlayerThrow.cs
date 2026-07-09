@@ -11,16 +11,33 @@ public class PlayerThrow : MonoBehaviour
     public float aimDistance = 100f;
 
     [Header("Throw Force")]
-    public float minThrowForce = 15f;
-    public float maxThrowForce = 40f;
-    public float maxChargeTime = 1.2f;
+    public float minThrowForce = 16f;
+    public float maxThrowForce = 42f;
+    public float maxChargeTime = 0.95f;
 
     [Header("Throw Cooldown")]
-    public float cooldown = 0.5f;
+    public float cooldown = 0.42f;
+
+    [Header("Throw Feel")]
+    public float throwShakeDuration = 0.06f;
+    public float throwShakeStrength = 0.07f;
+    public float throwFovPunch = 2.8f;
+
+    [Header("Animation Sync")]
+    [Tooltip("Atis animasyonu basladiktan sonra topun cikacagi sure (sn). " +
+             "Animasyon bu surede release pozuna yetisecek sekilde hizlanir.")]
+    public float ballReleaseDelay = 0.38f;
+
+    // Animasyon baslar baslamaz; top henuz cikmamistir.
+    public event System.Action OnThrowStarted;
+    // Top gercekten spawn oldugunda.
+    public event System.Action OnBallThrown;
 
     private float chargeStartTime;
     private float nextThrowTime = 0f;
     private bool isCharging = false;
+    private bool isThrowInProgress = false;
+    private Coroutine pendingThrowRoutine;
 
     private PlayerHealth playerHealth;
     private PlayerRole playerRole;
@@ -39,6 +56,7 @@ public class PlayerThrow : MonoBehaviour
         if (!GameManager.RoundIsActive)
         {
             isCharging = false;
+            CancelPendingThrow();
             return;
         }
 
@@ -46,6 +64,7 @@ public class PlayerThrow : MonoBehaviour
         if (playerHealth != null && playerHealth.IsEliminated)
         {
             isCharging = false;
+            CancelPendingThrow();
             return;
         }
 
@@ -56,8 +75,8 @@ public class PlayerThrow : MonoBehaviour
             return;
         }
 
-        // Cooldown bitmeden yeni atış hazırlanamaz.
-        if (Time.time < nextThrowTime)
+        // Cooldown / devam eden atis bitmeden yeni atis hazirlanamaz.
+        if (Time.time < nextThrowTime || isThrowInProgress)
         {
             return;
         }
@@ -97,14 +116,60 @@ public class PlayerThrow : MonoBehaviour
 
         float finalForce = Mathf.Lerp(minThrowForce, maxThrowForce, chargePercent);
 
-        ThrowBall(finalForce);
-
-        nextThrowTime = Time.time + cooldown;
+        BeginThrow(ballData, GetThrowDirection(), finalForce, rotateToAim: true);
     }
 
     void ThrowBall(float force)
     {
-        if (ballData == null || ballData.prefab == null)
+        BeginThrow(ballData, GetThrowDirection(), force, rotateToAim: true);
+    }
+
+    // Bot atışı: atış gücü ve top tipi BallData'dan gelir.
+    public void BotThrowAt(Vector3 targetPosition, BallData botBallData)
+    {
+        // Round bittiyse bot da atış yapamaz.
+        if (!GameManager.RoundIsActive)
+        {
+            return;
+        }
+
+        // Elenen bot top atamaz.
+        if (playerHealth != null && playerHealth.IsEliminated)
+        {
+            return;
+        }
+
+        // Bot da sadece Thrower rolündeyse top atabilir.
+        if (playerRole != null && playerRole.roleType != RoleType.Thrower)
+        {
+            return;
+        }
+
+        // Cooldown kontrolü.
+        if (Time.time < nextThrowTime || isThrowInProgress)
+        {
+            return;
+        }
+
+        if (botBallData == null || botBallData.prefab == null)
+        {
+            Debug.LogWarning("Bot atışı için Ball Data eksik!");
+            return;
+        }
+
+        if (throwPoint == null)
+        {
+            Debug.LogWarning("Bot atışı için Throw Point eksik!");
+            return;
+        }
+
+        Vector3 throwDirection = (targetPosition - throwPoint.position).normalized;
+        BeginThrow(botBallData, throwDirection, botBallData.throwForce, rotateToAim: true);
+    }
+
+    void BeginThrow(BallData dataToThrow, Vector3 throwDirection, float force, bool rotateToAim)
+    {
+        if (dataToThrow == null || dataToThrow.prefab == null)
         {
             Debug.LogWarning("Ball Data atanmadı veya prefab eksik!");
             return;
@@ -116,16 +181,62 @@ public class PlayerThrow : MonoBehaviour
             return;
         }
 
-        Vector3 throwDirection = GetThrowDirection();
-
         if (throwDirection == Vector3.zero)
         {
             return;
         }
 
-        SpawnAndThrowBall(ballData, throwDirection, force);
+        if (rotateToAim)
+        {
+            RotatePlayerToThrowDirection(throwDirection);
+        }
 
-        RotatePlayerToThrowDirection(throwDirection);
+        // Animasyon hemen baslar; top release aninda cikar.
+        CancelPendingThrow();
+        isThrowInProgress = true;
+        nextThrowTime = Time.time + Mathf.Max(cooldown, ballReleaseDelay);
+        OnThrowStarted?.Invoke();
+
+        pendingThrowRoutine = StartCoroutine(ReleaseBallAfterDelay(dataToThrow, throwDirection, force));
+    }
+
+    System.Collections.IEnumerator ReleaseBallAfterDelay(BallData dataToThrow, Vector3 throwDirection, float force)
+    {
+        float delay = Mathf.Max(0f, ballReleaseDelay);
+
+        if (delay > 0f)
+        {
+            yield return new WaitForSeconds(delay);
+        }
+
+        pendingThrowRoutine = null;
+
+        if (!GameManager.RoundIsActive ||
+            (playerHealth != null && playerHealth.IsEliminated))
+        {
+            isThrowInProgress = false;
+            yield break;
+        }
+
+        SpawnAndThrowBall(dataToThrow, throwDirection, force);
+        isThrowInProgress = false;
+    }
+
+    void CancelPendingThrow()
+    {
+        if (pendingThrowRoutine != null)
+        {
+            StopCoroutine(pendingThrowRoutine);
+            pendingThrowRoutine = null;
+        }
+
+        isThrowInProgress = false;
+    }
+
+    void OnDisable()
+    {
+        CancelPendingThrow();
+        isCharging = false;
     }
 
     Vector3 GetThrowDirection()
@@ -165,60 +276,13 @@ public class PlayerThrow : MonoBehaviour
         return (targetPoint - throwPoint.position).normalized;
     }
 
-    // Bot atışı: atış gücü ve top tipi BallData'dan gelir.
-    public void BotThrowAt(Vector3 targetPosition, BallData botBallData)
-    {
-        // Round bittiyse bot da atış yapamaz.
-        if (!GameManager.RoundIsActive)
-        {
-            return;
-        }
-
-        // Elenen bot top atamaz.
-        if (playerHealth != null && playerHealth.IsEliminated)
-        {
-            return;
-        }
-
-        // Bot da sadece Thrower rolündeyse top atabilir.
-        if (playerRole != null && playerRole.roleType != RoleType.Thrower)
-        {
-            return;
-        }
-
-        // Cooldown kontrolü.
-        if (Time.time < nextThrowTime)
-        {
-            return;
-        }
-
-        if (botBallData == null || botBallData.prefab == null)
-        {
-            Debug.LogWarning("Bot atışı için Ball Data eksik!");
-            return;
-        }
-
-        if (throwPoint == null)
-        {
-            Debug.LogWarning("Bot atışı için Throw Point eksik!");
-            return;
-        }
-
-        Vector3 throwDirection = (targetPosition - throwPoint.position).normalized;
-
-        SpawnAndThrowBall(botBallData, throwDirection, botBallData.throwForce);
-
-        RotatePlayerToThrowDirection(throwDirection);
-
-        nextThrowTime = Time.time + cooldown;
-    }
-
     void SpawnAndThrowBall(BallData dataToThrow, Vector3 throwDirection, float force)
     {
         // Topu karakterin gövdesinin içinde değil, biraz önünde oluşturuyoruz.
         Vector3 spawnPosition = throwPoint.position + throwDirection * 0.6f;
 
         GameObject ball = Instantiate(dataToThrow.prefab, spawnPosition, Quaternion.identity);
+        SceneFolders.ParentTo(ball.transform, SceneFolders.RuntimeSpawned);
 
         // Topa atan kişiyi owner olarak veriyoruz.
         // Böylece top, atan kişiye çarpınca onu elemez ve skor atana yazılır.
@@ -240,6 +304,9 @@ public class PlayerThrow : MonoBehaviour
         }
 
         PlayThrowSound(dataToThrow);
+        CameraShake.ShakeAll(throwShakeDuration, throwShakeStrength);
+        CameraShake.PunchFovAll(throwFovPunch, 0.12f);
+        OnBallThrown?.Invoke();
     }
 
     void PlayThrowSound(BallData dataToThrow)

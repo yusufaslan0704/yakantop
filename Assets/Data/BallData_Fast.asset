@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ballName: Fast Ball
   prefab: {fileID: 289847871389453925, guid: c98cced442712d240a614a4ab03f2644, type: 3}
-  throwForce: 36
-  cooldownMultiplier: 1.2
+  throwForce: 38
+  cooldownMultiplier: 1.15
   chance: 33.3
-  hitShakeDuration: 0.12
-  hitShakeStrength: 0.18
-  knockbackForce: 3
-  hitStopDuration: 0.04
-  throwSfx: {fileID: 0}
-  hitSfx: {fileID: 0}
+  hitShakeDuration: 0.1
+  hitShakeStrength: 0.2
+  knockbackForce: 3.5
+  hitStopDuration: 0.045
+  throwSfx: {fileID: 8300000, guid: 37f8a371cddd6e54f8b1527147952e5c, type: 3}
+  hitSfx: {fileID: 8300000, guid: 9cdf0c7f9f2d4814a921e1568b753b03, type: 3}

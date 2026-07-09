@@ -23,6 +23,7 @@ public class PlayerInputHandler : MonoBehaviour
 
     public Vector2 MoveInput { get; private set; }
     public bool DashPressed { get; private set; }
+    public bool DodgePressed { get; private set; }
     public bool ThrowPressed { get; private set; }
     public bool ThrowReleased { get; private set; }
     public bool ReviveHeld { get; private set; }
@@ -65,6 +66,7 @@ public class PlayerInputHandler : MonoBehaviour
         MoveInput = Vector2.ClampMagnitude(move, 1f);
 
         DashPressed = keyboard.leftShiftKey.wasPressedThisFrame;
+        DodgePressed = keyboard.qKey.wasPressedThisFrame;
         ReviveHeld = keyboard.fKey.isPressed;
 
         JumpPressed = keyboard.spaceKey.wasPressedThisFrame;
@@ -104,6 +106,9 @@ public class PlayerInputHandler : MonoBehaviour
         DashPressed = gamepad.rightShoulder.wasPressedThisFrame ||
                       gamepad.buttonEast.wasPressedThisFrame;
 
+        // Dodge: LB (dash'ten ayri).
+        DodgePressed = gamepad.leftShoulder.wasPressedThisFrame;
+
         // Atis: RT veya X (basili tut = sarj, birak = at).
         ThrowPressed = gamepad.rightTrigger.wasPressedThisFrame ||
                        gamepad.buttonWest.wasPressedThisFrame;
@@ -141,6 +146,7 @@ public class PlayerInputHandler : MonoBehaviour
     {
         MoveInput = Vector2.zero;
         DashPressed = false;
+        DodgePressed = false;
         ThrowPressed = false;
         ThrowReleased = false;
         ReviveHeld = false;

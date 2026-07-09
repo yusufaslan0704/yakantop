@@ -4,8 +4,8 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
-    public float moveSpeed = 8f;
-    public float rotationSpeed = 12f;
+    public float moveSpeed = 8.5f;
+    public float rotationSpeed = 14f;
 
     [Header("Camera")]
     public Transform cameraTransform;
@@ -118,6 +118,7 @@ public class PlayerMovement : MonoBehaviour
         velocity.y = rb.linearVelocity.y; // Yerçekimini koru.
 
         rb.linearVelocity = velocity;
+        rb.angularVelocity = Vector3.zero;
 
         if (moveDirection != Vector3.zero)
         {
@@ -128,6 +129,21 @@ public class PlayerMovement : MonoBehaviour
                 targetRotation,
                 rotationSpeed * Time.fixedDeltaTime
             ));
+        }
+        else
+        {
+            KeepUpright();
+        }
+    }
+
+    void KeepUpright()
+    {
+        Vector3 euler = rb.rotation.eulerAngles;
+
+        if (Mathf.Abs(Mathf.DeltaAngle(0f, euler.x)) > 0.01f ||
+            Mathf.Abs(Mathf.DeltaAngle(0f, euler.z)) > 0.01f)
+        {
+            rb.rotation = Quaternion.Euler(0f, euler.y, 0f);
         }
     }
 
@@ -148,6 +164,10 @@ public class PlayerMovement : MonoBehaviour
             velocity.x = 0f;
             velocity.z = 0f;
             rb.linearVelocity = velocity;
+            rb.angularVelocity = Vector3.zero;
+
+            Vector3 euler = transform.eulerAngles;
+            rb.rotation = Quaternion.Euler(0f, euler.y, 0f);
         }
     }
 }

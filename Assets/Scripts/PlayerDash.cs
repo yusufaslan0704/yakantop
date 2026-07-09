@@ -4,38 +4,33 @@ using UnityEngine;
 public class PlayerDash : MonoBehaviour
 {
     [Header("Dash Settings")]
-    public float dashDistance = 4f;
-    public float dashDuration = 0.18f;
-    public float dashCooldown = 2f;
+    public float dashDistance = 4.6f;
+    public float dashDuration = 0.15f;
+    public float dashCooldown = 1.85f;
 
-    [Tooltip("Dash boyunca hiz profili. Basta patlayici, sonda yumusak biter. " +
-             "Egrinin toplam alani otomatik normalize edilir; mesafe hep dashDistance olur.")]
+    [Tooltip("Dash boyunca hiz profili. Basta patlayici, sonda yumusak biter.")]
     public AnimationCurve speedCurve = new AnimationCurve(
-        new Keyframe(0f, 1f, 0f, 0f),
-        new Keyframe(0.6f, 0.85f, -1.2f, -1.2f),
-        new Keyframe(1f, 0.25f, -0.8f, 0f)
+        new Keyframe(0f, 1.15f, 0f, 0f),
+        new Keyframe(0.45f, 0.9f, -1.4f, -1.4f),
+        new Keyframe(1f, 0.2f, -0.9f, 0f)
     );
 
-    [Header("Dash Trail")]
-    public bool useTrail = true;
-    public Color trailColor = new Color(0.55f, 0.85f, 1f, 0.85f);
-    public float trailWidth = 0.55f;
-    public float trailFadeTime = 0.28f;
-    public Vector3 trailOffset = new Vector3(0f, 0.4f, 0f);
+    [Header("Dash Visuals")]
+    public bool useDashVisuals = true;
 
-    [Header("Dash VFX")]
-    public GameObject dashVfxPrefab;
-    public float vfxSpawnInterval = 0.04f;
-    public Vector3 vfxOffset = new Vector3(0f, 0.7f, 0f);
+    [Tooltip("Dash boyunca arkaya birakilan ince ruzgar cizgileri (karakter kopyasi YOK).")]
+    public float trailSpawnInterval = 0.03f;
+    public Color windColor = new Color(0.88f, 0.96f, 1f, 0.5f);
 
-    [Header("Dash Camera Shake")]
-    public float dashShakeDuration = 0.08f;
-    public float dashShakeStrength = 0.08f;
+    [Header("Dash Camera Feel")]
+    public float dashShakeDuration = 0.1f;
+    public float dashShakeStrength = 0.12f;
+    public float dashFovPunch = 5.5f;
+    public float dashFovPunchDuration = 0.16f;
 
     private bool isDashing = false;
     private float dashTimer = 0f;
     private float nextDashTime = 0f;
-    private float nextVfxTime = 0f;
 
     private Vector3 dashDirection;
     private float curveAverage = 1f;
@@ -44,7 +39,7 @@ public class PlayerDash : MonoBehaviour
     private PlayerHealth playerHealth;
     private PlayerInputHandler inputHandler;
     private PlayerMovement playerMovement;
-    private TrailRenderer trail;
+    private float nextTrailSpawnTime;
 
     void Awake()
     {
@@ -53,33 +48,23 @@ public class PlayerDash : MonoBehaviour
         inputHandler = GetComponent<PlayerInputHandler>();
         playerMovement = GetComponent<PlayerMovement>();
 
-        // Egrinin ortalama degerini bul: hiz bununla bolununce
-        // egri ne olursa olsun toplam mesafe dashDistance kalir.
         curveAverage = ComputeCurveAverage(speedCurve);
-
-        if (useTrail)
-        {
-            CreateTrail();
-        }
     }
 
     void Update()
     {
-        // Round bittiyse dash atılamaz.
         if (!GameManager.RoundIsActive)
         {
             StopDash();
             return;
         }
 
-        // Elenen oyuncu dash atamaz.
         if (playerHealth != null && playerHealth.IsEliminated)
         {
             StopDash();
             return;
         }
 
-        // Dash girisi: handler varsa oradan (klavye Shift / gamepad RB), yoksa eski usul.
         bool dashInput = inputHandler != null
             ? inputHandler.DashPressed
             : Input.GetKeyDown(KeyCode.LeftShift);
@@ -87,13 +72,6 @@ public class PlayerDash : MonoBehaviour
         if (dashInput && Time.time >= nextDashTime && !isDashing)
         {
             StartDash();
-        }
-
-        // Dash sırasında aralıklarla VFX bırak.
-        if (isDashing && Time.time >= nextVfxTime)
-        {
-            SpawnDashVFX();
-            nextVfxTime = Time.time + vfxSpawnInterval;
         }
     }
 
@@ -110,10 +88,7 @@ public class PlayerDash : MonoBehaviour
             return;
         }
 
-        // Dash'in neresindeyiz? (0 = basi, 1 = sonu)
         float progress = 1f - Mathf.Clamp01(dashTimer / dashDuration);
-
-        // Egriden anlik hiz: baslangicta patlayici, sonda yumusak.
         float baseSpeed = dashDistance / dashDuration;
         float dashSpeed = baseSpeed * (speedCurve.Evaluate(progress) / curveAverage);
 
@@ -121,8 +96,8 @@ public class PlayerDash : MonoBehaviour
         velocity.y = rb.linearVelocity.y;
 
         rb.linearVelocity = velocity;
+        rb.angularVelocity = Vector3.zero;
 
-        // Karakter dash yonune aninda donsun (kayarken yana bakmasin).
         rb.MoveRotation(Quaternion.Slerp(
             rb.rotation,
             Quaternion.LookRotation(dashDirection),
@@ -130,6 +105,12 @@ public class PlayerDash : MonoBehaviour
         ));
 
         dashTimer -= Time.fixedDeltaTime;
+
+        if (useDashVisuals && Time.time >= nextTrailSpawnTime)
+        {
+            SpawnTrailWisp();
+            nextTrailSpawnTime = Time.time + trailSpawnInterval;
+        }
 
         if (dashTimer <= 0f)
         {
@@ -142,7 +123,6 @@ public class PlayerDash : MonoBehaviour
         isDashing = true;
         dashTimer = dashDuration;
 
-        // Oyuncunun o an bastigi yone dash at; girdi yoksa baktigi yone.
         Vector3 inputDirection = playerMovement != null
             ? playerMovement.CurrentMoveDirection
             : Vector3.zero;
@@ -155,42 +135,31 @@ public class PlayerDash : MonoBehaviour
         dashDirection.Normalize();
 
         nextDashTime = Time.time + dashCooldown;
-        nextVfxTime = Time.time;
 
-        if (trail != null)
+        if (useDashVisuals)
         {
-            trail.Clear();
-            trail.emitting = true;
+            SpawnWindBurst();
         }
+
+        nextTrailSpawnTime = Time.time;
 
         PlayDashFeedback();
     }
 
     void StopDash()
     {
-        if (trail != null && isDashing)
-        {
-            trail.emitting = false;
-        }
-
         if (!isDashing)
         {
             return;
         }
 
         isDashing = false;
-
-        // Hizi sifirlamiyoruz: egri sonda zaten yavaslatti, kalan hiz
-        // bir sonraki FixedUpdate'te PlayerMovement tarafindan devralinir.
-        // Boylece dash'ten kosuya gecis akici olur.
     }
 
     void OnDisable()
     {
-        // Kontrol başka karaktere geçerse dash yarıda kesilsin.
         StopDash();
 
-        // Kontrol degisiminde karakter kayarak gitmesin.
         if (playerHealth != null && playerHealth.IsEliminated)
         {
             return;
@@ -202,82 +171,136 @@ public class PlayerDash : MonoBehaviour
             velocity.x = 0f;
             velocity.z = 0f;
             rb.linearVelocity = velocity;
+            rb.angularVelocity = Vector3.zero;
         }
+    }
+
+    void SpawnTrailWisp()
+    {
+        Vector3 right = Vector3.Cross(Vector3.up, dashDirection).normalized;
+        float side = Random.Range(-0.35f, 0.35f);
+        float back = Random.Range(0.55f, 0.95f);
+        float length = Random.Range(0.9f, 1.6f);
+        float height = Random.Range(0.55f, 1.05f);
+
+        Vector3 origin = transform.position + Vector3.up * 0.35f;
+        Vector3 streakPos = origin - dashDirection * back + right * side + Vector3.up * height * 0.1f;
+
+        SpawnWindStreak(streakPos, dashDirection, length, 0.025f + Random.value * 0.015f, 0.12f);
+    }
+
+    void SpawnWindBurst()
+    {
+        Vector3 origin = transform.position + Vector3.up * 0.25f;
+        Vector3 right = Vector3.Cross(Vector3.up, dashDirection).normalized;
+
+        SpawnRing(origin, dashDirection);
+
+        // Sadece arkada ve yanlarda; karakterin uzerinde degil.
+        for (int i = 0; i < 4; i++)
+        {
+            float side = Random.Range(-0.9f, 0.9f);
+            float back = Random.Range(0.7f, 1.6f);
+            float length = Random.Range(1.2f, 2.2f);
+
+            Vector3 streakPos = origin - dashDirection * back + right * side;
+            SpawnWindStreak(streakPos, dashDirection, length, 0.03f, 0.14f);
+        }
+    }
+
+    void SpawnRing(Vector3 position, Vector3 forward)
+    {
+        GameObject ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        ring.name = "DashRing";
+        ring.transform.position = position;
+        ring.transform.localScale = new Vector3(1.6f, 0.01f, 1.6f);
+        ring.transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
+        Destroy(ring.GetComponent<Collider>());
+
+        Material mat = CreateFadeMaterial(windColor);
+        ring.GetComponent<Renderer>().material = mat;
+
+        DashRingExpand expand = ring.AddComponent<DashRingExpand>();
+        expand.duration = 0.14f;
+        expand.endScale = 2.4f;
+    }
+
+    void SpawnWindStreak(Vector3 position, Vector3 direction, float length, float thickness, float fadeDuration)
+    {
+        GameObject streak = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        streak.name = "DashWind";
+        streak.transform.position = position + direction * (length * 0.5f);
+        streak.transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
+        streak.transform.localScale = new Vector3(thickness, thickness * 0.5f, length);
+        Destroy(streak.GetComponent<Collider>());
+
+        Material mat = CreateAdditiveMaterial(windColor);
+        streak.GetComponent<Renderer>().material = mat;
+
+        DashGhostFade fade = streak.AddComponent<DashGhostFade>();
+        fade.duration = fadeDuration;
+        fade.startAlpha = windColor.a;
+    }
+
+    Material CreateFadeMaterial(Color color)
+    {
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+
+        if (shader == null)
+        {
+            shader = Shader.Find("Standard");
+        }
+
+        Material mat = new Material(shader);
+        Color c = color;
+        c.a = color.a;
+
+        SetupTransparent(mat, c);
+        return mat;
+    }
+
+    Material CreateAdditiveMaterial(Color color)
+    {
+        Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+
+        if (shader == null)
+        {
+            shader = Shader.Find("Particles/Standard Unlit");
+        }
+
+        if (shader == null)
+        {
+            return CreateFadeMaterial(color);
+        }
+
+        Material mat = new Material(shader);
+        mat.SetColor("_BaseColor", color);
+        mat.SetColor("_Color", color);
+        return mat;
+    }
+
+    static void SetupTransparent(Material mat, Color color)
+    {
+        mat.SetFloat("_Surface", 1f);
+        mat.SetFloat("_Blend", 0f);
+        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        mat.SetInt("_ZWrite", 0);
+        mat.renderQueue = 3000;
+        mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        mat.SetColor("_BaseColor", color);
+        mat.SetColor("_Color", color);
     }
 
     void PlayDashFeedback()
     {
-        // Dash sesi.
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayDash();
         }
 
-        // Dash kamera shake.
-        if (CameraShake.Instance != null)
-        {
-            CameraShake.Instance.Shake(dashShakeDuration, dashShakeStrength);
-        }
-    }
-
-    void SpawnDashVFX()
-    {
-        if (dashVfxPrefab == null)
-        {
-            return;
-        }
-
-        Vector3 spawnPosition = transform.position + vfxOffset;
-
-        Instantiate(
-            dashVfxPrefab,
-            spawnPosition,
-            Quaternion.identity
-        );
-    }
-
-    // Kodla olusturulan iz: sahnede prefab/materyal ayarlamaya gerek yok.
-    void CreateTrail()
-    {
-        GameObject trailObject = new GameObject("DashTrail");
-
-        trailObject.transform.SetParent(transform, false);
-        trailObject.transform.localPosition = trailOffset;
-
-        trail = trailObject.AddComponent<TrailRenderer>();
-
-        trail.time = trailFadeTime;
-        trail.minVertexDistance = 0.08f;
-        trail.emitting = false;
-        trail.receiveShadows = false;
-        trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-        // Vertex rengini destekleyen basit shader; hem built-in hem URP'de calisir.
-        trail.material = new Material(Shader.Find("Sprites/Default"));
-
-        // Genislik: govdede kalin, ucta sivri.
-        trail.widthCurve = new AnimationCurve(
-            new Keyframe(0f, trailWidth),
-            new Keyframe(1f, 0.02f)
-        );
-
-        // Renk: bastan yari saydam, sona dogru tamamen kaybolur.
-        Gradient gradient = new Gradient();
-
-        gradient.SetKeys(
-            new[]
-            {
-                new GradientColorKey(trailColor, 0f),
-                new GradientColorKey(trailColor, 1f)
-            },
-            new[]
-            {
-                new GradientAlphaKey(trailColor.a, 0f),
-                new GradientAlphaKey(0f, 1f)
-            }
-        );
-
-        trail.colorGradient = gradient;
+        CameraShake.ShakeAll(dashShakeDuration, dashShakeStrength);
+        CameraShake.PunchFovAll(dashFovPunch, dashFovPunchDuration);
     }
 
     static float ComputeCurveAverage(AnimationCurve curve)
@@ -308,6 +331,16 @@ public class PlayerDash : MonoBehaviour
         }
 
         return 1f - Mathf.Clamp01(remainingTime / dashCooldown);
+    }
+
+    public float GetDashCooldownRemaining()
+    {
+        return Mathf.Max(0f, nextDashTime - Time.time);
+    }
+
+    public float GetDashCooldownDuration()
+    {
+        return dashCooldown;
     }
 
     public bool IsDashReady()

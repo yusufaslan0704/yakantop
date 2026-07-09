@@ -85,8 +85,24 @@ public class CharacterAnimator : MonoBehaviour
         UpdateBlink();
     }
 
+    public void ResetPose()
+    {
+        heightFactor = 1f;
+        impulseFactor = 1f;
+        wasGrounded = true;
+        transform.localScale = baseScale;
+    }
+
     void UpdateSquashStretch()
     {
+        if (modelMode)
+        {
+            transform.localScale = baseScale;
+            heightFactor = 1f;
+            impulseFactor = 1f;
+            return;
+        }
+
         // Egilme: hedef boy carpanina yumusak gecis.
         float targetHeight = 1f;
 

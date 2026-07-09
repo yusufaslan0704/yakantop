@@ -81,6 +81,11 @@ public class TeamControlManager : MonoBehaviour
             cameraFollow.target = runnerPlayer.transform;
         }
 
+        if (SplitScreenManager.Instance != null)
+        {
+            SplitScreenManager.Instance.RefreshLayout();
+        }
+
         Debug.Log("Kontrol RunnerPlayer'a geçti.");
     }
 
@@ -92,6 +97,11 @@ public class TeamControlManager : MonoBehaviour
         if (cameraFollow != null && saverPlayer != null)
         {
             cameraFollow.target = saverPlayer.transform;
+        }
+
+        if (SplitScreenManager.Instance != null)
+        {
+            SplitScreenManager.Instance.RefreshLayout();
         }
 
         Debug.Log("Runner elendi. Kontrol SaverPlayer'a geçti.");
@@ -108,12 +118,14 @@ public class TeamControlManager : MonoBehaviour
         PlayerJump jump = player.GetComponent<PlayerJump>();
         PlayerDuck duck = player.GetComponent<PlayerDuck>();
         PlayerEmote emote = player.GetComponent<PlayerEmote>();
+        PlayerDodge dodge = player.GetComponent<PlayerDodge>();
 
         // Ayni klavyeyi dinledikleri icin sadece kontrol edilen karakter
         // ziplayip egilebilir ve emote atabilir.
         if (jump != null) jump.enabled = isControlled;
         if (duck != null) duck.enabled = isControlled;
         if (emote != null) emote.enabled = isControlled;
+        if (dodge != null) dodge.enabled = isControlled;
 
         if (movement != null)
         {
@@ -136,14 +148,14 @@ public class TeamControlManager : MonoBehaviour
             throwScript.enabled = false;
         }
 
-        // Revive sadece Saver kontrol ediliyorken aktif olsun.
+        // Revive: insan kontrolunde veya SaverBot aktifken acik kalsin.
         if (revive != null)
         {
             PlayerRole role = player.GetComponent<PlayerRole>();
+            bool isSaver = role != null && role.roleType == RoleType.Saver;
+            SaverBot saverBot = player.GetComponent<SaverBot>();
 
-            revive.enabled = isControlled &&
-                             role != null &&
-                             role.roleType == RoleType.Saver;
+            revive.enabled = isSaver && (isControlled || saverBot != null);
         }
     }
 }

@@ -12,12 +12,14 @@ public class AudioManager : MonoBehaviour
     public AudioClip hitSfx;
     public AudioClip dashSfx;
     public AudioClip reviveSfx;
+    public AudioClip dodgeSfx;
 
     [Header("Volume")]
     [Range(0f, 1f)] public float throwVolume = 0.8f;
     [Range(0f, 1f)] public float hitVolume = 0.9f;
     [Range(0f, 1f)] public float dashVolume = 0.7f;
     [Range(0f, 1f)] public float reviveVolume = 0.9f;
+    [Range(0f, 1f)] public float dodgeVolume = 0.75f;
 
     [Header("Variation")]
     [Tooltip("Her ses biraz farklı tonda çalar, tekrar hissini kırar. 0 = kapalı.")]
@@ -57,6 +59,18 @@ public class AudioManager : MonoBehaviour
     public void PlayRevive()
     {
         PlaySfx(reviveSfx, reviveVolume);
+    }
+
+    public void PlayDodge()
+    {
+        if (dodgeSfx != null)
+        {
+            PlaySfx(dodgeSfx, dodgeVolume);
+            return;
+        }
+
+        // Dodge sesi yoksa dash sesine dus.
+        PlayDash();
     }
 
     // Top tipine özel sesler gibi dışarıdan gelen klipler için.

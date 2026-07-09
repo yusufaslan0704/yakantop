@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 4930891129605682611}
   - component: {fileID: 5679637016894860655}
   m_Layer: 0
-  m_Name: Ball_Normal
+  m_Name: PF_Ball_Heavy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 5, z: 2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.35, y: 1.35, z: 1.35}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -70,7 +70,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 0dd4498d87b14079b654e49f3c00d0eb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -123,7 +123,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 289847871389453925}
   serializedVersion: 5
-  m_Mass: 1
+  m_Mass: 2
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -156,12 +156,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Ball
   lifeTime: 5
   hitEffectPrefab: {fileID: 3637294896099317143, guid: b23bcda5df9ac8f4aa52b34e25998991, type: 3}
-  environmentHitShakeDuration: 0.16
-  environmentHitShakeStrength: 0.16
-  playerHitShakeDuration: 0.22
-  playerHitShakeStrength: 0.27
-  useKnockback: 1
-  knockbackForce: 4
+  environmentHitShakeDuration: 0.12
+  environmentHitShakeStrength: 0.12
+  playerHitShakeDuration: 0.27
+  playerHitShakeStrength: 0.38
+  knockbackForce: 8
+  hitStopDuration: 0.05
 --- !u!96 &5679637016894860655
 TrailRenderer:
   serializedVersion: 4
@@ -215,7 +215,7 @@ TrailRenderer:
   m_PreviewTimeScale: 1
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.2
+    widthMultiplier: 0.25
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -233,7 +233,7 @@ TrailRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 0.5803922, b: 1, a: 1}
+      key0: {r: 0.068841234, g: 0.51764065, b: 0.8584906, a: 1}
       key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}

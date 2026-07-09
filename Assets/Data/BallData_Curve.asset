@@ -17,12 +17,12 @@ MonoBehaviour:
   throwForce: 30
   cooldownMultiplier: 1.15
   chance: 20
-  hitShakeDuration: 0.18
-  hitShakeStrength: 0.22
-  knockbackForce: 4
-  hitStopDuration: 0.05
-  throwSfx: {fileID: 0}
-  hitSfx: {fileID: 0}
+  hitShakeDuration: 0.17
+  hitShakeStrength: 0.25
+  knockbackForce: 4.8
+  hitStopDuration: 0.065
+  throwSfx: {fileID: 8300000, guid: 37f8a371cddd6e54f8b1527147952e5c, type: 3}
+  hitSfx: {fileID: 8300000, guid: 9cdf0c7f9f2d4814a921e1568b753b03, type: 3}
   maxBounces: 0
   bounceSpeedKeep: 0.8
-  curveForce: 32
+  curveForce: 36

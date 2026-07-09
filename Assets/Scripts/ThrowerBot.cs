@@ -90,8 +90,6 @@ public class ThrowerBot : MonoBehaviour
         {
             lastTargetPosition = currentTarget.position;
             targetVelocity = Vector3.zero;
-
-            Debug.Log("Bot hedef değiştirdi: " + currentTarget.name);
         }
 
         UpdateTargetVelocity();

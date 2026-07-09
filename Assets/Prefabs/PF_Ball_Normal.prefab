@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 4930891129605682611}
   - component: {fileID: 5679637016894860655}
   m_Layer: 0
-  m_Name: Ball_Bouncy
+  m_Name: PF_Ball_Normal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -70,7 +70,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ea330cf009eb43cabece96d4b6bfef0f, type: 2}
+  - {fileID: 2100000, guid: a2991d62aefd4683858dba87cca268cf, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -160,8 +160,8 @@ MonoBehaviour:
   environmentHitShakeStrength: 0.16
   playerHitShakeDuration: 0.22
   playerHitShakeStrength: 0.27
-  useKnockback: 1
   knockbackForce: 4
+  hitStopDuration: 0.05
 --- !u!96 &5679637016894860655
 TrailRenderer:
   serializedVersion: 4
@@ -233,7 +233,7 @@ TrailRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.4, g: 1, b: 0.45, a: 1}
+      key0: {r: 1, g: 0.5803922, b: 1, a: 1}
       key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}

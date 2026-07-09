@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 4930891129605682611}
   - component: {fileID: 5679637016894860655}
   m_Layer: 0
-  m_Name: Ball_Curve
+  m_Name: PF_Ball_Curve
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -160,8 +160,8 @@ MonoBehaviour:
   environmentHitShakeStrength: 0.16
   playerHitShakeDuration: 0.22
   playerHitShakeStrength: 0.27
-  useKnockback: 1
   knockbackForce: 4
+  hitStopDuration: 0.05
 --- !u!96 &5679637016894860655
 TrailRenderer:
   serializedVersion: 4
