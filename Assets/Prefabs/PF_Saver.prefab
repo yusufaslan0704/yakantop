@@ -485,11 +485,17 @@ MonoBehaviour:
   - Geliyorum!
   - Dayan!
   - <3
-  displayDuration: 2
-  heightOffset: 2.7
-  textSize: 0.35
-  textColor: {r: 1, g: 1, b: 1, a: 1}
-  cooldown: 0.8
+  - GG
+  - Kalk!
+  - Wow!
+  - ...
+  displayDuration: 1.6
+  heightOffset: 2.55
+  textSize: 0.16
+  fontSize: 64
+  textColor: {r: 0.95, g: 0.98, b: 1, a: 1}
+  outlineColor: {r: 0.02, g: 0.04, b: 0.08, a: 0.95}
+  cooldown: 0.75
 --- !u!114 &2103868688469173155
 MonoBehaviour:
   m_ObjectHideFlags: 0

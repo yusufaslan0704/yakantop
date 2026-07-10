@@ -24,6 +24,7 @@ public class CharacterModelVisual : MonoBehaviour
 
     const string RunnerModelPath = "Models/RunnerCharacter";
     const string SaverModelPath = "Models/SaverCharacter";
+    const string ThrowerModelPath = "Models/ThrowerCharacter";
 
     [Tooltip("Model boyu kapsulden cok farkliysa (cok kucuk/buyuk FBX) otomatik olcekle.")]
     public bool autoFitStaticModel = true;
@@ -97,6 +98,9 @@ public class CharacterModelVisual : MonoBehaviour
 
     private Transform modelTransform;
     private Vector3 baseModelScale = Vector3.one;
+
+    /// <summary>Aktif karakter modeli (yoksa null). Decoy bunu birebir kopyalar.</summary>
+    public Transform ModelTransform => modelTransform;
     private float currentLean;
     private float duckVisualFactor = 1f;
 
@@ -258,7 +262,15 @@ public class CharacterModelVisual : MonoBehaviour
 
         SkinnedMeshRenderer skinnedMesh = instance.GetComponentInChildren<SkinnedMeshRenderer>();
 
-        if (skinnedMesh == null && fallbackToAnimatedIfStatic && modelResourcePath != idleClipPath)
+        bool isRoleModel =
+            modelResourcePath == RunnerModelPath ||
+            modelResourcePath == SaverModelPath ||
+            modelResourcePath == ThrowerModelPath;
+
+        if (skinnedMesh == null &&
+            fallbackToAnimatedIfStatic &&
+            !isRoleModel &&
+            modelResourcePath != idleClipPath)
         {
             Debug.Log(name + ": model rig'siz (" + modelResourcePath + "). Animasyonlu fallback -> " + idleClipPath);
             Destroy(instance);
@@ -287,6 +299,12 @@ public class CharacterModelVisual : MonoBehaviour
 
             animator.applyRootMotion = false;
             skinnedMesh = instance.GetComponentInChildren<SkinnedMeshRenderer>();
+        }
+        else if (skinnedMesh == null && isRoleModel)
+        {
+            Debug.LogWarning(
+                name + ": " + modelResourcePath +
+                " skinned mesh yok; yine de ozel model tutuluyor (Idle fallback yok).");
         }
 
         if (autoFitStaticModel)
@@ -431,7 +449,8 @@ public class CharacterModelVisual : MonoBehaviour
             // Role modellerinde her zaman opak Lit kullan.
             bool forceRoleFallback =
                 modelResourcePath == RunnerModelPath ||
-                modelResourcePath == SaverModelPath;
+                modelResourcePath == SaverModelPath ||
+                modelResourcePath == ThrowerModelPath;
 
             bool needsFallback =
                 forceRoleFallback ||
@@ -503,11 +522,24 @@ public class CharacterModelVisual : MonoBehaviour
         {
             ApplyRoleModelPath(SaverModelPath);
         }
+        else if (role.roleType == RoleType.Thrower)
+        {
+            ApplyRoleModelPath(ThrowerModelPath);
+        }
     }
 
     void ApplyRoleModelPath(string preferredPath)
     {
-        if (fallbackToAnimatedIfStatic && !ModelPrefabHasRig(preferredPath))
+        // Role modelleri (Runner/Saver/Thrower) her zaman tercih edilir.
+        // Rig yoksa bile Idle'a dusme — ozel mesh gorunsun; animasyon sonra eklenir.
+        bool isRoleModel =
+            preferredPath == RunnerModelPath ||
+            preferredPath == SaverModelPath ||
+            preferredPath == ThrowerModelPath;
+
+        if (!isRoleModel &&
+            fallbackToAnimatedIfStatic &&
+            !ModelPrefabHasRig(preferredPath))
         {
             modelResourcePath = idleClipPath;
         }
@@ -1048,13 +1080,15 @@ public class CharacterModelVisual : MonoBehaviour
 
     void HandleEmote(int emoteIndex)
     {
-        if (emoteIndex < 0 || emoteIndex >= danceIndices.Count) return;
+        if (danceIndices.Count == 0) return;
 
-        if (danceIndices[emoteIndex] < 0) return;
+        // Emote sayisi dans klibinden fazla olabilir; dongusel esle.
+        int danceSlot = ((emoteIndex % danceIndices.Count) + danceIndices.Count) % danceIndices.Count;
+        if (danceIndices[danceSlot] < 0) return;
 
         activeActionIndex = -1;
-        activeDance = emoteIndex;
-        danceEndTime = Time.time + clips[danceIndices[emoteIndex]].length;
+        activeDance = danceSlot;
+        danceEndTime = Time.time + clips[danceIndices[danceSlot]].length;
     }
 
     void UpdateWeights(int targetIndex)

@@ -26,6 +26,11 @@ public class Ball : MonoBehaviour
     private float curveSign;
     private Vector3 lastVelocity;
 
+    bool spawnTrapOnImpact;
+    float trapRadius = 3.2f;
+    float trapDuration = 4.5f;
+    float trapSpeedMultiplier = 0.42f;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -84,24 +89,57 @@ public class Ball : MonoBehaviour
         remainingBounces = data != null ? data.maxBounces : 0;
     }
 
+    public void EnableTrapOnImpact(float radius, float duration, float speedMultiplier)
+    {
+        spawnTrapOnImpact = true;
+        trapRadius = radius;
+        trapDuration = duration;
+        trapSpeedMultiplier = speedMultiplier;
+        // Trap topu sekmesin; ilk carpista alan biraksin.
+        remainingBounces = 0;
+    }
+
+    void TrySpawnTrap(Vector3 hitPoint)
+    {
+        if (!spawnTrapOnImpact) return;
+        spawnTrapOnImpact = false;
+        TrapZone.Spawn(hitPoint, trapRadius, trapDuration, trapSpeedMultiplier);
+    }
+
     void OnCollisionEnter(Collision collision)
     {
+        Vector3 hitNormal = Vector3.up;
         Vector3 hitPoint = transform.position;
 
         if (collision.contacts.Length > 0)
         {
             hitPoint = collision.contacts[0].point;
+            hitNormal = collision.contacts[0].normal;
         }
 
-        SpawnHitEffect(hitPoint);
+        Color ballColor = CombatVfx.ReadBallColor(gameObject, Color.white);
         PlayHitSound();
+
+        // Decoy silueti: oyuncu degil — elenmez, revive edilemez; sadece flash patlar.
+        DecoyClone decoy = collision.gameObject.GetComponentInParent<DecoyClone>();
+        if (decoy != null)
+        {
+            GameObject decoyOwnerGo = decoy.Owner != null ? decoy.Owner.gameObject : null;
+            KillfeedUI.PushDecoyFlash(owner, decoyOwnerGo);
+            decoy.PopFromBallHit(hitPoint, hitNormal, ballColor);
+            Destroy(gameObject);
+            return;
+        }
 
         PlayerHealth playerHealth = collision.gameObject.GetComponentInParent<PlayerHealth>();
 
         // Top yere, duvara veya oyuncu olmayan objeye carptiysa.
         if (playerHealth == null)
         {
+            SpawnHitEffect(hitPoint, hitNormal, ballColor, isPlayerHit: false);
             ShakeCamera(environmentHitShakeDuration, environmentHitShakeStrength);
+
+            TrySpawnTrap(hitPoint);
 
             // Sekten top: yok olmak yerine yuzeyden seker.
             if (remainingBounces > 0 && collision.contacts.Length > 0)
@@ -143,7 +181,7 @@ public class Ball : MonoBehaviour
         PlayerShield shield = playerHealth.GetComponent<PlayerShield>();
         if (shield != null && shield.enabled && shield.TryConsumeShield(this))
         {
-            SpawnHitEffect(transform.position);
+            SpawnHitEffect(transform.position, hitNormal, ballColor, isPlayerHit: true);
             ShakeCamera(environmentHitShakeDuration, environmentHitShakeStrength * 0.85f);
             Destroy(gameObject);
             return;
@@ -153,12 +191,14 @@ public class Ball : MonoBehaviour
         PlayerDodge dodge = playerHealth.GetComponent<PlayerDodge>();
         if (dodge != null && dodge.enabled && dodge.TryConsumeParry(this))
         {
-            SpawnHitEffect(transform.position);
+            SpawnHitEffect(transform.position, hitNormal, ballColor, isPlayerHit: true);
             ShakeCamera(environmentHitShakeDuration, environmentHitShakeStrength * 0.7f);
             return;
         }
 
+        SpawnHitEffect(hitPoint, hitNormal, ballColor, isPlayerHit: true);
         HitPlayer(playerHealth);
+        TrySpawnTrap(playerHealth.transform.position);
 
         Destroy(gameObject);
     }
@@ -201,6 +241,9 @@ public class Ball : MonoBehaviour
         // Savrulmayi Eliminate'e veriyoruz ki elenme animasyonuyla birlikte islensin.
         playerHealth.Eliminate(knockbackDirection * knockback);
 
+        string ballLabel = data != null ? data.ballName : null;
+        KillfeedUI.PushKill(owner, playerHealth.gameObject, ballLabel);
+
         if (GameManager.Instance != null)
         {
             // Skor, topu atan oyuncuya yazilir.
@@ -220,14 +263,22 @@ public class Ball : MonoBehaviour
         rb.linearVelocity = reflected * speedKeep;
     }
 
-    void SpawnHitEffect(Vector3 position)
+    void SpawnHitEffect(Vector3 position, Vector3 normal, Color color, bool isPlayerHit)
     {
-        if (hitEffectPrefab == null)
+        if (isPlayerHit)
         {
-            return;
+            CombatVfx.SpawnPlayerHit(position, color);
+        }
+        else
+        {
+            CombatVfx.SpawnImpact(position, normal, color);
         }
 
-        Instantiate(hitEffectPrefab, position, Quaternion.identity);
+        if (hitEffectPrefab != null)
+        {
+            GameObject fx = Instantiate(hitEffectPrefab, position, Quaternion.identity);
+            SceneFolders.ParentTo(fx.transform, SceneFolders.RuntimeSpawned);
+        }
     }
 
     void PlayHitSound()

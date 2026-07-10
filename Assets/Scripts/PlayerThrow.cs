@@ -68,6 +68,12 @@ public class PlayerThrow : MonoBehaviour
             return;
         }
 
+        // Emote cemberi acikken atis baslatma.
+        if (EmoteWheelUI.IsOpen)
+        {
+            return;
+        }
+
         // Mouse ile sadece Thrower rolündeki oyuncu top atabilir.
         if (playerRole != null && playerRole.roleType != RoleType.Thrower)
         {
@@ -197,10 +203,48 @@ public class PlayerThrow : MonoBehaviour
         nextThrowTime = Time.time + Mathf.Max(cooldown, ballReleaseDelay);
         OnThrowStarted?.Invoke();
 
-        pendingThrowRoutine = StartCoroutine(ReleaseBallAfterDelay(dataToThrow, throwDirection, force));
+        pendingThrowRoutine = StartCoroutine(ReleaseBallAfterDelay(dataToThrow, throwDirection, force, null));
     }
 
-    System.Collections.IEnumerator ReleaseBallAfterDelay(BallData dataToThrow, Vector3 throwDirection, float force)
+    // Yetenek atisi (Trap vb.): tek top + loft + spawn sonrasi ayar.
+    public bool TryThrowAbilityBall(
+        BallData dataToThrow,
+        float force,
+        float loft,
+        System.Action<Ball> configureBall)
+    {
+        if (!GameManager.RoundIsActive) return false;
+        if (playerHealth != null && playerHealth.IsEliminated) return false;
+        if (playerRole != null && playerRole.roleType != RoleType.Thrower) return false;
+        if (Time.time < nextThrowTime || isThrowInProgress) return false;
+        if (dataToThrow == null || dataToThrow.prefab == null || throwPoint == null) return false;
+
+        Vector3 throwDirection = GetThrowDirection();
+        if (throwDirection == Vector3.zero) return false;
+
+        if (loft > 0f)
+        {
+            throwDirection = (throwDirection + Vector3.up * loft).normalized;
+        }
+
+        RotatePlayerToThrowDirection(throwDirection);
+
+        isCharging = false;
+        CancelPendingThrow();
+        isThrowInProgress = true;
+        nextThrowTime = Time.time + Mathf.Max(cooldown, 0.35f);
+        OnThrowStarted?.Invoke();
+
+        pendingThrowRoutine = StartCoroutine(
+            ReleaseBallAfterDelay(dataToThrow, throwDirection, force, configureBall));
+        return true;
+    }
+
+    System.Collections.IEnumerator ReleaseBallAfterDelay(
+        BallData dataToThrow,
+        Vector3 throwDirection,
+        float force,
+        System.Action<Ball> configureBall)
     {
         float delay = Mathf.Max(0f, ballReleaseDelay);
 
@@ -218,7 +262,18 @@ public class PlayerThrow : MonoBehaviour
             yield break;
         }
 
-        SpawnAndThrowBall(dataToThrow, throwDirection, force);
+        GameObject ballGo = SpawnAndThrowBall(
+            dataToThrow, throwDirection, force, playFeedback: true, spawnLateralOffset: Vector3.zero);
+
+        if (configureBall != null && ballGo != null)
+        {
+            Ball ball = ballGo.GetComponent<Ball>();
+            if (ball != null)
+            {
+                configureBall(ball);
+            }
+        }
+
         isThrowInProgress = false;
     }
 
@@ -241,59 +296,249 @@ public class PlayerThrow : MonoBehaviour
 
     Vector3 GetThrowDirection()
     {
-        // Gamepad oyuncusu fareyle nisan alamaz: karakterin baktigi yone atar.
+        // Gamepad: karakterin baktigi yon.
         bool useForwardAim = inputHandler != null &&
                              inputHandler.scheme == ControlScheme.Gamepad;
 
         if (useForwardAim || playerCamera == null)
         {
-            Vector3 forward = transform.forward;
-            forward.y = 0f;
-
-            if (forward == Vector3.zero)
-            {
-                return Vector3.zero;
-            }
-
-            // Hafif yukari egim: top yercekimiyle dusmeden hedefe ulassin.
-            return (forward.normalized + Vector3.up * 0.08f).normalized;
+            return GetBodyForwardAim();
         }
 
-        // Klavye+fare: ekranin ortasindaki crosshair'e dogru atis.
+        return GetCameraAimDirection();
+    }
+
+    Vector3 GetBodyForwardAim()
+    {
+        Vector3 forward = transform.forward;
+        forward.y = 0f;
+
+        if (forward.sqrMagnitude < 0.0001f)
+        {
+            return Vector3.zero;
+        }
+
+        // Hafif yukari egim: top hemen yere gomulmesin.
+        return (forward.normalized + Vector3.up * 0.12f).normalized;
+    }
+
+    Vector3 GetCameraAimDirection()
+    {
         Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
-        Vector3 targetPoint;
+        // Varsayilan: kameranin baktigi uzak nokta (yakin zemin isabetini kullanma).
+        Vector3 targetPoint = ray.GetPoint(Mathf.Min(aimDistance, 45f));
 
-        if (Physics.Raycast(ray, out RaycastHit hit, aimDistance))
+        RaycastHit[] hits = Physics.RaycastAll(ray, aimDistance, ~0, QueryTriggerInteraction.Ignore);
+        float bestDist = float.MaxValue;
+
+        for (int i = 0; i < hits.Length; i++)
         {
-            targetPoint = hit.point;
-        }
-        else
-        {
-            targetPoint = ray.GetPoint(aimDistance);
+            RaycastHit hit = hits[i];
+            if (hit.collider == null) continue;
+
+            // Kendi collider / cok yakin isabet (ayak alti zemin) atisi asagi ceker.
+            if (hit.collider.transform == transform || hit.collider.transform.IsChildOf(transform))
+            {
+                continue;
+            }
+
+            if (hit.distance < 3f)
+            {
+                continue;
+            }
+
+            if (hit.distance < bestDist)
+            {
+                bestDist = hit.distance;
+                targetPoint = hit.point;
+            }
         }
 
-        // Flash: insan atici da isabet kaybeder.
         if (PlayerFlash.AreThrowersBlinded())
         {
             targetPoint += Random.insideUnitSphere * 3.5f;
         }
 
-        return (targetPoint - throwPoint.position).normalized;
+        Vector3 dir = targetPoint - throwPoint.position;
+        if (dir.sqrMagnitude < 0.01f)
+        {
+            return GetCameraForwardAim();
+        }
+
+        // Nisan neredeyse geriye veya dimdik asagiysa kamera ileri yonunu kullan.
+        Vector3 flat = dir;
+        flat.y = 0f;
+        Vector3 bodyFlat = transform.forward;
+        bodyFlat.y = 0f;
+
+        if (flat.sqrMagnitude < 0.35f ||
+            (bodyFlat.sqrMagnitude > 0.01f && Vector3.Dot(flat.normalized, bodyFlat.normalized) < 0.15f))
+        {
+            return GetCameraForwardAim();
+        }
+
+        // Asiri egimi yumusat.
+        Vector3 n = dir.normalized;
+        if (n.y < -0.25f)
+        {
+            n.y = -0.25f;
+            n.Normalize();
+        }
+
+        return n;
+    }
+
+    Vector3 GetCameraForwardAim()
+    {
+        Vector3 forward = playerCamera.transform.forward;
+        forward.y = Mathf.Clamp(forward.y, -0.15f, 0.4f);
+
+        if (forward.sqrMagnitude < 0.0001f)
+        {
+            return GetBodyForwardAim();
+        }
+
+        return forward.normalized;
+    }
+
+    // Yetenek: nisan etrafinda yayilan coklu top (orn. 20° / 3 top).
+    // overrideBall: verilirse o tip kullanilir (volley = Fast).
+    // loft: ekstra yukari egim (menzil).
+    public bool TryThrowSpread(
+        float totalSpreadDegrees,
+        int count,
+        float force,
+        BallData overrideBall = null,
+        float loft = 0f)
+    {
+        if (!GameManager.RoundIsActive) return false;
+        if (playerHealth != null && playerHealth.IsEliminated) return false;
+        if (playerRole != null && playerRole.roleType != RoleType.Thrower) return false;
+        if (Time.time < nextThrowTime || isThrowInProgress) return false;
+
+        BallData dataToThrow = overrideBall != null ? overrideBall : ballData;
+        if (dataToThrow == null || dataToThrow.prefab == null || throwPoint == null) return false;
+
+        Vector3 centerDir = GetThrowDirection();
+        if (centerDir == Vector3.zero) return false;
+
+        RotatePlayerToThrowDirection(centerDir);
+
+        isCharging = false;
+        CancelPendingThrow();
+        isThrowInProgress = true;
+        nextThrowTime = Time.time + Mathf.Max(cooldown, 0.35f);
+        OnThrowStarted?.Invoke();
+
+        pendingThrowRoutine = StartCoroutine(
+            ReleaseSpreadAfterDelay(dataToThrow, centerDir, force, totalSpreadDegrees, count, loft));
+        return true;
+    }
+
+    System.Collections.IEnumerator ReleaseSpreadAfterDelay(
+        BallData dataToThrow,
+        Vector3 centerDir,
+        float force,
+        float totalSpreadDegrees,
+        int count,
+        float loft)
+    {
+        float delay = Mathf.Min(0.18f, Mathf.Max(0f, ballReleaseDelay * 0.45f));
+        if (delay > 0f)
+        {
+            yield return new WaitForSeconds(delay);
+        }
+
+        pendingThrowRoutine = null;
+
+        if (!GameManager.RoundIsActive ||
+            (playerHealth != null && playerHealth.IsEliminated))
+        {
+            isThrowInProgress = false;
+            yield break;
+        }
+
+        count = Mathf.Max(1, count);
+        float half = totalSpreadDegrees * 0.5f;
+
+        // Yatay yayilim: up ekseni etrafinda -half .. +half
+        Vector3 flat = centerDir;
+        flat.y = 0f;
+        if (flat.sqrMagnitude < 0.0001f)
+        {
+            flat = transform.forward;
+            flat.y = 0f;
+        }
+
+        flat.Normalize();
+        float pitchY = centerDir.y + loft;
+
+        // Ayni volley'deki toplar birbirine carpmasin / birbirini yok etmesin.
+        Collider[] spawnedColliders = new Collider[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            float t = count == 1 ? 0.5f : i / (float)(count - 1);
+            float yaw = Mathf.Lerp(-half, half, t);
+            Vector3 dir = Quaternion.AngleAxis(yaw, Vector3.up) * flat;
+            dir = (dir + Vector3.up * pitchY).normalized;
+
+            Vector3 lateral = Vector3.Cross(Vector3.up, flat).normalized;
+            // Spawn araligi: dar acida bile collider overlap olmasin.
+            Vector3 spawnOffset = lateral * Mathf.Lerp(-0.55f, 0.55f, t);
+
+            GameObject ball = SpawnAndThrowBall(
+                dataToThrow, dir, force, playFeedback: i == 0, spawnLateralOffset: spawnOffset);
+
+            if (ball != null)
+            {
+                spawnedColliders[i] = ball.GetComponent<Collider>();
+            }
+        }
+
+        IgnoreCollisionsBetween(spawnedColliders);
+
+        isThrowInProgress = false;
+    }
+
+    static void IgnoreCollisionsBetween(Collider[] colliders)
+    {
+        if (colliders == null) return;
+
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] == null) continue;
+
+            for (int j = i + 1; j < colliders.Length; j++)
+            {
+                if (colliders[j] == null) continue;
+                Physics.IgnoreCollision(colliders[i], colliders[j], true);
+            }
+        }
     }
 
     void SpawnAndThrowBall(BallData dataToThrow, Vector3 throwDirection, float force)
     {
-        // Topu karakterin gövdesinin içinde değil, biraz önünde oluşturuyoruz.
-        Vector3 spawnPosition = throwPoint.position + throwDirection * 0.6f;
+        SpawnAndThrowBall(dataToThrow, throwDirection, force, playFeedback: true, spawnLateralOffset: Vector3.zero);
+    }
+
+    GameObject SpawnAndThrowBall(
+        BallData dataToThrow,
+        Vector3 throwDirection,
+        float force,
+        bool playFeedback,
+        Vector3 spawnLateralOffset)
+    {
+        Vector3 spawnPosition = throwPoint.position + throwDirection * 0.6f + spawnLateralOffset;
 
         GameObject ball = Instantiate(dataToThrow.prefab, spawnPosition, Quaternion.identity);
         SceneFolders.ParentTo(ball.transform, SceneFolders.RuntimeSpawned);
 
-        // Topa atan kişiyi owner olarak veriyoruz.
-        // Böylece top, atan kişiye çarpınca onu elemez ve skor atana yazılır.
-        Ball ballScript = ball.GetComponent<Ball>();
+        Color trailColor = CombatVfx.ReadBallColor(ball, Color.white);
+        CombatVfx.TintBallTrail(ball, trailColor);
 
+        Ball ballScript = ball.GetComponent<Ball>();
         if (ballScript != null)
         {
             ballScript.SetOwner(gameObject);
@@ -301,7 +546,6 @@ public class PlayerThrow : MonoBehaviour
         }
 
         Rigidbody ballRb = ball.GetComponent<Rigidbody>();
-
         if (ballRb != null)
         {
             ballRb.linearVelocity = Vector3.zero;
@@ -309,10 +553,15 @@ public class PlayerThrow : MonoBehaviour
             ballRb.AddForce(throwDirection * force, ForceMode.Impulse);
         }
 
-        PlayThrowSound(dataToThrow);
-        CameraShake.ShakeAll(throwShakeDuration, throwShakeStrength);
-        CameraShake.PunchFovAll(throwFovPunch, 0.12f);
-        OnBallThrown?.Invoke();
+        if (playFeedback)
+        {
+            PlayThrowSound(dataToThrow);
+            CameraShake.ShakeAll(throwShakeDuration, throwShakeStrength);
+            CameraShake.PunchFovAll(throwFovPunch, 0.12f);
+            OnBallThrown?.Invoke();
+        }
+
+        return ball;
     }
 
     void PlayThrowSound(BallData dataToThrow)

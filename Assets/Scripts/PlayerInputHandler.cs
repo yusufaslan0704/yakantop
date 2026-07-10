@@ -18,6 +18,9 @@ public class PlayerInputHandler : MonoBehaviour
     [Tooltip("Birden fazla gamepad bagliysa bu oyuncunun kullanacagi gamepad (0 = ilk).")]
     public int gamepadIndex = 0;
 
+    [Tooltip("Aciksa WASD yerine ok tuslari (atici klavye kontrolu).")]
+    public bool useArrowKeysForMove = false;
+
     [Header("Gamepad Settings")]
     [Range(0f, 0.5f)] public float stickDeadzone = 0.15f;
 
@@ -27,14 +30,22 @@ public class PlayerInputHandler : MonoBehaviour
     public bool FlashPressed { get; private set; }
     public bool ShieldPressed { get; private set; }
     public bool InvisibilityPressed { get; private set; }
+    public bool DecoyPressed { get; private set; }
+    public bool VolleyPressed { get; private set; }
+    public bool TrapPressed { get; private set; }
     public bool ThrowPressed { get; private set; }
     public bool ThrowReleased { get; private set; }
     public bool ReviveHeld { get; private set; }
     public bool JumpPressed { get; private set; }
     public bool DuckHeld { get; private set; }
 
-    // Bu kare basilan emote (0-3). Basilmadiysa -1.
+    // Bu kare basilan emote (0-3 hotkey / D-Pad). Basilmadiysa -1.
     public int EmoteIndex { get; private set; } = -1;
+
+    // Emote cemberi: T / Select basili tut.
+    public bool EmoteWheelHeld { get; private set; }
+    public bool EmoteWheelReleased { get; private set; }
+    public Vector2 EmoteWheelStick { get; private set; }
 
     void Update()
     {
@@ -61,10 +72,20 @@ public class PlayerInputHandler : MonoBehaviour
 
         Vector2 move = Vector2.zero;
 
-        if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) move.x -= 1f;
-        if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) move.x += 1f;
-        if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed) move.y -= 1f;
-        if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed) move.y += 1f;
+        if (useArrowKeysForMove)
+        {
+            if (keyboard.leftArrowKey.isPressed) move.x -= 1f;
+            if (keyboard.rightArrowKey.isPressed) move.x += 1f;
+            if (keyboard.downArrowKey.isPressed) move.y -= 1f;
+            if (keyboard.upArrowKey.isPressed) move.y += 1f;
+        }
+        else
+        {
+            if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) move.x -= 1f;
+            if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) move.x += 1f;
+            if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed) move.y -= 1f;
+            if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed) move.y += 1f;
+        }
 
         MoveInput = Vector2.ClampMagnitude(move, 1f);
 
@@ -73,6 +94,8 @@ public class PlayerInputHandler : MonoBehaviour
         FlashPressed = keyboard.eKey.wasPressedThisFrame;
         ShieldPressed = keyboard.gKey.wasPressedThisFrame;
         InvisibilityPressed = keyboard.vKey.wasPressedThisFrame;
+        // Decoy: X (R = GameManager round/mac reset).
+        DecoyPressed = keyboard.xKey.wasPressedThisFrame;
         ReviveHeld = keyboard.fKey.isPressed;
 
         JumpPressed = keyboard.spaceKey.wasPressedThisFrame;
@@ -84,8 +107,17 @@ public class PlayerInputHandler : MonoBehaviour
         else if (keyboard.digit3Key.wasPressedThisFrame) EmoteIndex = 2;
         else if (keyboard.digit4Key.wasPressedThisFrame) EmoteIndex = 3;
 
+        EmoteWheelHeld = keyboard.tKey.isPressed;
+        EmoteWheelReleased = keyboard.tKey.wasReleasedThisFrame;
+        EmoteWheelStick = Vector2.zero;
+
         ThrowPressed = mouse != null && mouse.leftButton.wasPressedThisFrame;
         ThrowReleased = mouse != null && mouse.leftButton.wasReleasedThisFrame;
+        // Thrower volley: sag tik.
+        VolleyPressed = mouse != null && mouse.rightButton.wasPressedThisFrame;
+        // Thrower trap: orta mouse veya B (F = Saver revive).
+        TrapPressed = keyboard.bKey.wasPressedThisFrame ||
+                      (mouse != null && mouse.middleButton.wasPressedThisFrame);
     }
 
     void ReadGamepad()
@@ -124,6 +156,15 @@ public class PlayerInputHandler : MonoBehaviour
         // Invisibility: left stick click.
         InvisibilityPressed = gamepad.leftStickButton.wasPressedThisFrame;
 
+        // Decoy (Runner): X / Square — Runner'da throw/revive yok.
+        DecoyPressed = gamepad.buttonWest.wasPressedThisFrame;
+
+        // Volley (Thrower): LB — Runner dodge ayri component; Thrower'da serbest.
+        VolleyPressed = gamepad.leftShoulder.wasPressedThisFrame;
+
+        // Trap (Thrower): R3 — Runner shield R3; Thrower'da shield yok.
+        TrapPressed = gamepad.rightStickButton.wasPressedThisFrame;
+
         // Atis: RT veya X (basili tut = sarj, birak = at).
         ThrowPressed = gamepad.rightTrigger.wasPressedThisFrame ||
                        gamepad.buttonWest.wasPressedThisFrame;
@@ -139,12 +180,17 @@ public class PlayerInputHandler : MonoBehaviour
         // Egilme: LT basili tut.
         DuckHeld = gamepad.leftTrigger.isPressed;
 
-        // Emote: D-Pad yonleri.
+        // Emote: D-Pad yonleri (hizli secim).
         EmoteIndex = -1;
         if (gamepad.dpad.up.wasPressedThisFrame) EmoteIndex = 0;
         else if (gamepad.dpad.right.wasPressedThisFrame) EmoteIndex = 1;
         else if (gamepad.dpad.down.wasPressedThisFrame) EmoteIndex = 2;
         else if (gamepad.dpad.left.wasPressedThisFrame) EmoteIndex = 3;
+
+        // Emote cemberi: Select / Back / View.
+        EmoteWheelHeld = gamepad.selectButton.isPressed;
+        EmoteWheelReleased = gamepad.selectButton.wasReleasedThisFrame;
+        EmoteWheelStick = gamepad.rightStick.ReadValue();
     }
 
     Gamepad GetGamepad()
@@ -165,11 +211,17 @@ public class PlayerInputHandler : MonoBehaviour
         FlashPressed = false;
         ShieldPressed = false;
         InvisibilityPressed = false;
+        DecoyPressed = false;
+        VolleyPressed = false;
+        TrapPressed = false;
         ThrowPressed = false;
         ThrowReleased = false;
         ReviveHeld = false;
         JumpPressed = false;
         DuckHeld = false;
         EmoteIndex = -1;
+        EmoteWheelHeld = false;
+        EmoteWheelReleased = false;
+        EmoteWheelStick = Vector2.zero;
     }
 }

@@ -161,12 +161,13 @@ public class MatchLobbyManager : MonoBehaviour
         ApplySettings();
         ConfigureRunnerBot();
         ConfigureThrowers();
+        AbilityLoadout.ApplyToAllPlayers();
         SetGameplayInputEnabled(true);
         HideLobby();
         SetLobbyCursor(false);
         GameManager.Instance.BeginMatch();
 
-        Debug.Log("Lobiden maç başlatıldı.");
+        Debug.Log("Lobiden maç başlatıldı. Loadout: " + string.Join(", ", AbilityLoadout.Picks));
     }
 
     // Lobby'de imlec serbest ve gorunur; mac basinda kamera tekrar kilitler.
@@ -214,7 +215,7 @@ public class MatchLobbyManager : MonoBehaviour
         if (mainThrower != null)
         {
             mainThrower.transform.position = baseSpawn + new Vector3(xOffsets[0], 0f, 0f);
-            ConfigureThrowerObject(mainThrower, throwerIsHuman && HasGamepad());
+            ConfigureThrowerObject(mainThrower, throwerIsHuman);
         }
 
         for (int i = 1; i < totalThrowers; i++)
@@ -267,6 +268,7 @@ public class MatchLobbyManager : MonoBehaviour
         ThrowerBot bot = thrower.GetComponent<ThrowerBot>();
         PlayerMovement movement = thrower.GetComponent<PlayerMovement>();
         ThrowerHumanControl human = thrower.GetComponent<ThrowerHumanControl>();
+        PlayerInputHandler input = thrower.GetComponent<PlayerInputHandler>();
 
         if (human != null)
         {
@@ -276,6 +278,22 @@ public class MatchLobbyManager : MonoBehaviour
         {
             if (bot != null) bot.enabled = !humanControl;
             if (movement != null) movement.enabled = humanControl;
+        }
+
+        // Gamepad yoksa klavye+fare: ok tuslari hareket, mouse atis/volley.
+        if (input != null && humanControl)
+        {
+            bool hasPad = HasGamepad();
+            input.scheme = hasPad ? ControlScheme.Gamepad : ControlScheme.KeyboardMouse;
+            input.useArrowKeysForMove = !hasPad;
+            if (hasPad)
+            {
+                input.gamepadIndex = 0;
+            }
+        }
+        else if (input != null)
+        {
+            input.useArrowKeysForMove = false;
         }
     }
 
@@ -401,7 +419,19 @@ public class MatchLobbyUI : MonoBehaviour
     TMP_Text runnerBotStatus;
     TMP_Text throwerControlStatus;
     TMP_Text gamepadHint;
+    TMP_Text loadoutHint;
 
+    struct LoadoutChip
+    {
+        public LoadoutAbility ability;
+        public Image background;
+        public TMP_Text label;
+        public Color normalColor;
+        public Color selectedColor;
+        public Color hoverColor;
+    }
+
+    readonly List<LoadoutChip> loadoutChips = new List<LoadoutChip>();
     readonly List<ClickZone> clickZones = new List<ClickZone>();
     readonly List<TMP_InputField> editableInputs = new List<TMP_InputField>();
     static Sprite whiteSprite;
@@ -438,16 +468,65 @@ public class MatchLobbyUI : MonoBehaviour
 
         if (throwerControlStatus != null)
         {
-            throwerControlStatus.text = lobby.throwerIsHuman ? "Insan (Gamepad)" : "Bot";
+            throwerControlStatus.text = lobby.throwerIsHuman ? "Insan" : "Bot";
         }
 
         if (gamepadHint != null)
         {
             bool hasPad = Gamepad.all.Count > 0;
             gamepadHint.text = lobby.throwerIsHuman
-                ? (hasPad ? "Gamepad bagli" : "Gamepad yok - bot kullanilacak")
+                ? (hasPad
+                    ? "Gamepad: hareket + RT atis + LB volley + R3 trap"
+                    : "Klavye: Ok tuslari | Sol tik atis | Sag tik volley | B / orta mouse trap")
                 : "";
             gamepadHint.gameObject.SetActive(lobby.throwerIsHuman);
+        }
+
+        RefreshLoadoutChips();
+    }
+
+    void RefreshLoadoutChips()
+    {
+        for (int i = 0; i < loadoutChips.Count; i++)
+        {
+            LoadoutChip chip = loadoutChips[i];
+            bool selected = AbilityLoadout.IsSelected(chip.ability);
+
+            if (chip.background != null)
+            {
+                chip.background.color = selected ? chip.selectedColor : chip.normalColor;
+            }
+
+            if (chip.label != null)
+            {
+                chip.label.color = selected ? UIColorPalette.Title : UIColorPalette.Muted;
+                chip.label.text = AbilityLoadout.DisplayName(chip.ability) +
+                                  "\n<size=70%>" + AbilityLoadout.KeyHint(chip.ability) +
+                                  " · " + AbilityLoadout.ShortDesc(chip.ability) + "</size>";
+            }
+
+            // Hover sistemi secili rengi ezmesin.
+            for (int z = 0; z < clickZones.Count; z++)
+            {
+                if (clickZones[z].image != chip.background) continue;
+
+                ClickZone zone = clickZones[z];
+                zone.normalColor = selected ? chip.selectedColor : chip.normalColor;
+                zone.hoverColor = selected
+                    ? Color.Lerp(chip.selectedColor, Color.white, 0.15f)
+                    : chip.hoverColor;
+                clickZones[z] = zone;
+                break;
+            }
+        }
+
+        if (loadoutHint != null)
+        {
+            loadoutHint.text = "Yetenek loadout: " + AbilityLoadout.Count + "/" + AbilityLoadout.MaxPicks +
+                               "  (en fazla 2 sec)";
+            loadoutHint.color = AbilityLoadout.Count >= AbilityLoadout.MaxPicks
+                ? UIColorPalette.Accent
+                : UIColorPalette.Muted;
         }
     }
 
@@ -594,6 +673,7 @@ public class MatchLobbyUI : MonoBehaviour
     {
         clickZones.Clear();
         editableInputs.Clear();
+        loadoutChips.Clear();
 
         GameObject canvasObject = new GameObject("LobbyCanvas");
         lobbyCanvas = canvasObject.AddComponent<Canvas>();
@@ -619,7 +699,7 @@ public class MatchLobbyUI : MonoBehaviour
         backgroundImage.color = UIColorPalette.Backdrop;
         backgroundImage.raycastTarget = false;
 
-        GameObject card = CreatePanel("LobbyCard", panelRoot.transform, new Vector2(560f, 640f));
+        GameObject card = CreatePanel("LobbyCard", panelRoot.transform, new Vector2(600f, 780f));
         RectTransform cardRect = card.GetComponent<RectTransform>();
         cardRect.anchorMin = new Vector2(0.5f, 0.5f);
         cardRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -631,8 +711,8 @@ public class MatchLobbyUI : MonoBehaviour
         cardBg.raycastTarget = false;
 
         VerticalLayoutGroup layout = card.AddComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(24, 24, 24, 24);
-        layout.spacing = 10f;
+        layout.padding = new RectOffset(24, 24, 20, 20);
+        layout.spacing = 8f;
         layout.childAlignment = TextAnchor.UpperCenter;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
@@ -678,16 +758,117 @@ public class MatchLobbyUI : MonoBehaviour
 
         gamepadHint = CreateHint(card.transform);
 
+        CreateDivider(card.transform);
+        CreateLoadoutSection(card.transform);
+
         GameObject spacer = new GameObject("Spacer", typeof(RectTransform));
         spacer.transform.SetParent(card.transform, false);
         LayoutElement spacerLe = spacer.AddComponent<LayoutElement>();
         spacerLe.flexibleHeight = 1f;
-        spacerLe.minHeight = 8f;
+        spacerLe.minHeight = 6f;
 
         CreateStartButton(card.transform);
 
         Canvas.ForceUpdateCanvases();
         LayoutRebuilder.ForceRebuildLayoutImmediate(cardRect);
+        RefreshLoadoutChips();
+    }
+
+    void CreateLoadoutSection(Transform parent)
+    {
+        TMP_Text header = CreateText("LoadoutHeader", parent, "KACAN YETENEKLERI", 15, FontStyles.Bold);
+        header.alignment = TextAlignmentOptions.Center;
+        header.color = UIColorPalette.Accent;
+        LayoutElement headerLe = header.gameObject.AddComponent<LayoutElement>();
+        headerLe.preferredHeight = 22f;
+
+        loadoutHint = CreateText("LoadoutHint", parent, "", 13, FontStyles.Normal);
+        loadoutHint.alignment = TextAlignmentOptions.Center;
+        loadoutHint.color = UIColorPalette.Muted;
+        LayoutElement hintLe = loadoutHint.gameObject.AddComponent<LayoutElement>();
+        hintLe.preferredHeight = 18f;
+
+        GameObject row = new GameObject("LoadoutRow", typeof(RectTransform));
+        row.transform.SetParent(parent, false);
+
+        HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+        hlg.spacing = 8f;
+        hlg.childAlignment = TextAnchor.MiddleCenter;
+        hlg.childControlWidth = true;
+        hlg.childControlHeight = true;
+        hlg.childForceExpandWidth = true;
+        hlg.childForceExpandHeight = false;
+
+        LayoutElement rowLe = row.AddComponent<LayoutElement>();
+        rowLe.preferredHeight = 64f;
+
+        CreateLoadoutChip(row.transform, LoadoutAbility.Flash);
+        CreateLoadoutChip(row.transform, LoadoutAbility.Shield);
+        CreateLoadoutChip(row.transform, LoadoutAbility.Invisibility);
+        CreateLoadoutChip(row.transform, LoadoutAbility.Decoy);
+    }
+
+    void CreateLoadoutChip(Transform parent, LoadoutAbility ability)
+    {
+        Color normal = new Color(0.1f, 0.14f, 0.2f, 1f);
+        Color selected = new Color(0.12f, 0.32f, 0.42f, 1f);
+        Color hover = new Color(0.18f, 0.26f, 0.36f, 1f);
+
+        GameObject chip = CreatePanel("Chip_" + ability, parent, new Vector2(0f, 60f));
+        Image bg = chip.GetComponent<Image>();
+        bg.color = normal;
+        bg.raycastTarget = false;
+
+        LayoutElement le = chip.AddComponent<LayoutElement>();
+        le.preferredHeight = 60f;
+        le.flexibleWidth = 1f;
+        le.minWidth = 90f;
+
+        TMP_Text label = CreateText("Label", chip.transform, AbilityLoadout.DisplayName(ability), 13, FontStyles.Bold);
+        label.alignment = TextAlignmentOptions.Center;
+        label.color = UIColorPalette.Muted;
+        label.enableWordWrapping = true;
+        label.overflowMode = TextOverflowModes.Ellipsis;
+        StretchFull(label.rectTransform);
+        label.rectTransform.offsetMin = new Vector2(4f, 4f);
+        label.rectTransform.offsetMax = new Vector2(-4f, -4f);
+
+        loadoutChips.Add(new LoadoutChip
+        {
+            ability = ability,
+            background = bg,
+            label = label,
+            normalColor = normal,
+            selectedColor = selected,
+            hoverColor = hover
+        });
+
+        LoadoutAbility captured = ability;
+        RegisterClickZone(chip.GetComponent<RectTransform>(), bg, normal, hover, () => OnLoadoutChipClicked(captured));
+    }
+
+    void OnLoadoutChipClicked(LoadoutAbility ability)
+    {
+        if (!AbilityLoadout.TryToggle(ability))
+        {
+            if (loadoutHint != null)
+            {
+                if (AbilityLoadout.IsSelected(ability) && AbilityLoadout.Count <= AbilityLoadout.MinPicks)
+                {
+                    loadoutHint.text = "En az 1 yetenek secili olmali";
+                    loadoutHint.color = UIColorPalette.Warning;
+                }
+                else
+                {
+                    loadoutHint.text = "En fazla 2 yetenek — once birini kaldir";
+                    loadoutHint.color = UIColorPalette.Warning;
+                }
+            }
+
+            return;
+        }
+
+        RefreshLoadoutChips();
     }
 
     void StretchFull(RectTransform rect)

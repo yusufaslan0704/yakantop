@@ -173,6 +173,7 @@ GameObject:
   - component: {fileID: 910700001}
   - component: {fileID: 910700002}
   - component: {fileID: 910700005}
+  - component: {fileID: 910700006}
   m_Layer: 0
   m_Name: PF_Runner
   m_TagString: Player
@@ -512,14 +513,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerEmote
   emotes:
   - Haha!
-  - Buraya at!
+  - Buraya!
   - Iskaladin!
   - <3
-  displayDuration: 2
-  heightOffset: 2.7
-  textSize: 0.35
-  textColor: {r: 1, g: 1, b: 1, a: 1}
-  cooldown: 0.8
+  - GG
+  - Kos!
+  - Wow!
+  - ...
+  displayDuration: 1.6
+  heightOffset: 2.55
+  textSize: 0.16
+  fontSize: 64
+  textColor: {r: 0.95, g: 0.98, b: 1, a: 1}
+  outlineColor: {r: 0.02, g: 0.04, b: 0.08, a: 0.95}
+  cooldown: 0.75
 --- !u!114 &181777639064767183
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -656,3 +663,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInvisibility
   duration: 4
   cooldown: 12
+  selfGhostAlpha: 0.32
+--- !u!114 &910700006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5748222098914828971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a64789b0c1d2e3f4a50606, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDecoy
+  duration: 4.5
+  cooldown: 11
+  spawnForwardOffset: 0.15
+  decoyMoveSpeed: 7.2
+  freeWanderDuration: 2
+  flashBlindDuration: 2.4
+  flashShakeDuration: 0.14
+  flashShakeStrength: 0.2
+  modelResourcePath: Models/RunnerCharacter
+  modelScale: 250
+  modelYOffset: -1
+  idleBobAmount: 0.045
+  idleBobSpeed: 9

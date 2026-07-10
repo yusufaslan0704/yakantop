@@ -7,7 +7,8 @@ public static class ForceRunnerCharacterReimport
     static readonly string[] ModelPaths =
     {
         "Assets/Resources/Models/RunnerCharacter.fbx",
-        "Assets/Resources/Models/SaverCharacter.fbx"
+        "Assets/Resources/Models/SaverCharacter.fbx",
+        "Assets/Resources/Models/ThrowerCharacter.fbx"
     };
 
     [MenuItem("Tools/Force Reimport Role Characters")]

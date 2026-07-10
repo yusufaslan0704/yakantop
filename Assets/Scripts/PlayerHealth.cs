@@ -142,6 +142,7 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log(gameObject.name + " elendi!");
 
         SetColor(Color.red);
+        CombatVfx.SpawnEliminationPuff(transform.position);
 
         // Kinematik cisimlere (örn. TargetDummy) kuvvet uygulanamaz.
         if (rb != null && !rb.isKinematic)

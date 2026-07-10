@@ -102,6 +102,7 @@ public class PlayerRevive : MonoBehaviour
         PlayerHealth revivedPlayer = targetToRevive;
 
         revivedPlayer.Revive();
+        KillfeedUI.PushRevive(gameObject, revivedPlayer.gameObject);
 
         PlayReviveFeedback(revivedPlayer.transform.position);
 
@@ -117,6 +118,8 @@ public class PlayerRevive : MonoBehaviour
             if (player == null || player.Health == null) continue;
             if (player.Health == playerHealth) continue;
             if (!player.Health.IsEliminated) continue;
+            // Decoy asla revive hedefi degil (PlayerHealth olmasa da guvenlik).
+            if (DecoyClone.IsDecoy(player)) continue;
 
             float distance = Vector3.Distance(transform.position, player.transform.position);
 

@@ -19,6 +19,11 @@ public class FlashBlindOverlay : MonoBehaviour
         EnsureInstance();
         if (instance == null) return;
 
+        if (SplitScreenManager.Instance != null)
+        {
+            SplitScreenManager.Instance.EnsureThrowerCameraReady();
+        }
+
         instance.duration = Mathf.Max(0.2f, blindDuration);
         instance.startAt = Time.unscaledTime;
         instance.hideAt = Time.unscaledTime + instance.duration;

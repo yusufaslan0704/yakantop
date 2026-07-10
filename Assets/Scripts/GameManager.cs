@@ -245,6 +245,7 @@ public class GameManager : MonoBehaviour
 
         score = 0;
         scoreByPlayer.Clear();
+        TrapZone.ClearAll();
 
         roundActive = true;
         gameEnded = false;

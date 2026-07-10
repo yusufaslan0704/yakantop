@@ -8,6 +8,8 @@ public class ThrowerHumanControl : MonoBehaviour
     private ThrowerBot bot;
     private PlayerMovement movement;
     private PlayerInputHandler inputHandler;
+    private PlayerVolley volley;
+    private PlayerTrap trap;
 
     private bool humanActive;
     private bool initialized;
@@ -18,6 +20,8 @@ public class ThrowerHumanControl : MonoBehaviour
         bot = GetComponent<ThrowerBot>();
         movement = GetComponent<PlayerMovement>();
         inputHandler = GetComponent<PlayerInputHandler>();
+        volley = GetComponent<PlayerVolley>();
+        trap = GetComponent<PlayerTrap>();
     }
 
     void Update()
@@ -57,14 +61,40 @@ public class ThrowerHumanControl : MonoBehaviour
             movement.enabled = human;
         }
 
+        if (volley != null)
+        {
+            volley.enabled = human;
+        }
+
+        if (trap != null)
+        {
+            trap.enabled = human;
+        }
+
+        // Lobiden insan secildiyse gamepad yokken de atis/volley acik kalsin.
+        if (inputHandler != null && human)
+        {
+            bool hasPad = HasGamepadForThisPlayer();
+            if (!hasPad)
+            {
+                inputHandler.scheme = ControlScheme.KeyboardMouse;
+                inputHandler.useArrowKeysForMove = true;
+            }
+            else
+            {
+                inputHandler.scheme = ControlScheme.Gamepad;
+                inputHandler.useArrowKeysForMove = false;
+            }
+        }
+
         if (SplitScreenManager.Instance != null)
         {
             SplitScreenManager.Instance.RefreshLayout();
         }
 
         Debug.Log(human
-            ? "Gamepad baglandi: Thrower artik 2. oyuncunun kontrolunde."
-            : "Gamepad yok: Thrower bot kontrolunde.");
+            ? "Thrower insan kontrolunde."
+            : "Thrower bot kontrolunde.");
     }
 
     // Lobiden gelen zorunlu kontrol modu; gamepad algilamasini devre disi birakir.

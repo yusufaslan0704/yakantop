@@ -6,6 +6,13 @@ Bu yüzden oyun Idle Mixamo modeline fallback ediyor; Idle/Run/Throw/Dash/Hit an
 
 Kod tarafı hazır: rig’li FBX gelince otomatik Humanoid import + animasyon bağlanır.
 
+**Roller:**
+| Rol | Dosya |
+|-----|--------|
+| Runner | `Assets/Resources/Models/RunnerCharacter.fbx` |
+| Saver | `Assets/Resources/Models/SaverCharacter.fbx` |
+| Thrower | `Assets/Resources/Models/ThrowerCharacter.fbx` |
+
 ---
 
 ## En kolay yol: Mixamo Auto-Rigger

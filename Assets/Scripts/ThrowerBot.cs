@@ -25,6 +25,11 @@ public class ThrowerBot : MonoBehaviour
     public Color telegraphColor = new Color(1f, 0.85f, 0.2f);
     public float telegraphFlashSpeed = 14f;
 
+    [Header("Decoy")]
+    [Range(0f, 1f)]
+    [Tooltip("Aktif decoy varken botun ona atma ihtimali.")]
+    public float decoyTargetChance = 0.72f;
+
     private PlayerThrow playerThrow;
     private PlayerHealth playerHealth;
 
@@ -38,6 +43,7 @@ public class ThrowerBot : MonoBehaviour
     private Transform currentTarget;
     private Vector3 lastTargetPosition;
     private Vector3 targetVelocity;
+    private bool lockedOntoDecoy;
 
     private float nextThrowTime;
 
@@ -213,9 +219,36 @@ public class ThrowerBot : MonoBehaviour
 
     // Hedefler artik sahne referansi degil: PlayerManager'dan dinamik secilir.
     // Once hayattaki en yakin Runner, yoksa en yakin Saver.
-    // Gorunmez hedefler atlanir.
+    // Gorunmez hedefler atlanir. Aktif decoy varsa siklikla ona kilitlenir.
     void SelectTarget()
     {
+        if (isTelegraphing && currentTarget != null)
+        {
+            return;
+        }
+
+        // Decoy'a kilitliyken ayakta kaldigi surece hedefi bozma.
+        if (lockedOntoDecoy && currentTarget != null)
+        {
+            DecoyClone decoyLock = currentTarget.GetComponent<DecoyClone>();
+            if (decoyLock != null)
+            {
+                return;
+            }
+
+            lockedOntoDecoy = false;
+        }
+
+        Transform decoy = PlayerDecoy.GetClosestDecoy(transform.position);
+        if (decoy != null && Random.value <= decoyTargetChance)
+        {
+            currentTarget = decoy;
+            lockedOntoDecoy = true;
+            return;
+        }
+
+        lockedOntoDecoy = false;
+
         PlayerRole target = GetClosestVisibleAlive(RoleType.Runner, transform.position);
 
         if (target == null)

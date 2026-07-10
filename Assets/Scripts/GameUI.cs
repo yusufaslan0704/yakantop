@@ -28,7 +28,31 @@ public class GameUI : MonoBehaviour
     void Awake()
     {
         EnsureCanvasScaler();
+        EnsureEmoteWheel();
+        KillfeedUI.EnsureExists();
         ApplyStyles();
+    }
+
+    static void EnsureEmoteWheel()
+    {
+        if (FindFirstObjectByType<EmoteWheelUI>() != null)
+        {
+            return;
+        }
+
+        // Lobby gameplay Canvas'i kapatir; tekerlek o Canvas'in child'i olursa
+        // Update hic calismaz. Ayri, her zaman aktif bir root kullan.
+        GameObject host = GameObject.Find("EmoteWheelUI");
+        if (host == null)
+        {
+            host = new GameObject("EmoteWheelUI");
+            DontDestroyOnLoad(host);
+        }
+
+        if (host.GetComponent<EmoteWheelUI>() == null)
+        {
+            host.AddComponent<EmoteWheelUI>();
+        }
     }
 
     void Update()
@@ -58,6 +82,7 @@ public class GameUI : MonoBehaviour
         if (reviveCountdownText != null) reviveCountdownText.gameObject.SetActive(false);
         if (endGamePanel != null) endGamePanel.SetActive(false);
         if (crosshairText != null) crosshairText.gameObject.SetActive(false);
+        KillfeedUI.ClearAll();
     }
 
     void UpdateHud()

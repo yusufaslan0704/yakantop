@@ -473,6 +473,8 @@ public class ArenaBuilder : MonoBehaviour
         );
         SetFloorTiling(pocket.GetComponent<Renderer>(), pocketWidth, pocketDepth);
 
+        Renderer[] rimRenderers = null;
+
         if (enableVisualPolish)
         {
             Transform rim = CreateChild(objectName + "_Rim", parent);
@@ -482,6 +484,7 @@ public class ArenaBuilder : MonoBehaviour
             AddNeonStrip(rim, new Vector3(centerX, rimY, -pocketHalfDepth), new Vector3(pocketWidth, 0.05f, 0.08f), matNeonBlue);
             AddNeonStrip(rim, new Vector3(centerX - pocketHalfWidth, rimY, 0f), new Vector3(0.08f, 0.05f, pocketDepth), matNeonBlue);
             AddNeonStrip(rim, new Vector3(centerX + pocketHalfWidth, rimY, 0f), new Vector3(0.08f, 0.05f, pocketDepth), matNeonBlue);
+            rimRenderers = rim.GetComponentsInChildren<Renderer>();
         }
 
         GameObject triggerObject = new GameObject(objectName);
@@ -495,6 +498,7 @@ public class ArenaBuilder : MonoBehaviour
 
         SafeZone safeZone = triggerObject.AddComponent<SafeZone>();
         safeZone.floorRenderer = pocket.GetComponent<Renderer>();
+        safeZone.rimRenderers = rimRenderers;
     }
 
     Transform CreateChild(string objectName, Transform parent)
@@ -769,6 +773,19 @@ public class ArenaBuilder : MonoBehaviour
         wall.transform.rotation = Quaternion.Euler(0f, angleY, 0f);
         wall.transform.localScale = new Vector3(wallThickness, wallHeight, length + wallThickness);
         wall.GetComponent<Renderer>().sharedMaterial = matWall;
+
+        if (enableVisualPolish)
+        {
+            // Dis duvarlarla ayni neon taci: hourglass kenarlari da okunur olsun.
+            GameObject strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            strip.name = "HourglassNeon";
+            strip.transform.SetParent(parent, false);
+            strip.transform.position = new Vector3(midX, wallHeight * 0.88f, midZ);
+            strip.transform.rotation = Quaternion.Euler(0f, angleY, 0f);
+            strip.transform.localScale = new Vector3(0.1f, 0.12f, length + wallThickness);
+            strip.GetComponent<Renderer>().sharedMaterial = matNeon;
+            Object.Destroy(strip.GetComponent<Collider>());
+        }
     }
 
     void AddNeonStrip(Transform parent, Vector3 position, Vector3 scale, Material material)

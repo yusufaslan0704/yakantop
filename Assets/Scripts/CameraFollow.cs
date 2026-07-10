@@ -31,7 +31,7 @@ public class CameraFollow : MonoBehaviour
     {
         if (target == null) return;
 
-        if (!IsLobbyActive())
+        if (!IsLobbyActive() && !EmoteWheelUI.IsOpen)
         {
             ReadLookInput();
         }
@@ -105,8 +105,8 @@ public class CameraFollow : MonoBehaviour
 
     void ApplyCursorState()
     {
-        // Lobby acikken kamera imleci kilitlemesin; UI tiklanabilir kalsin.
-        if (!lockCursor || IsLobbyActive())
+        // Lobby veya emote cemberi acikken imlec serbest.
+        if (!lockCursor || IsLobbyActive() || EmoteWheelUI.IsOpen)
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;

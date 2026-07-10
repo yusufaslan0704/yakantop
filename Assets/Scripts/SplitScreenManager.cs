@@ -20,7 +20,7 @@ public class SplitScreenManager : MonoBehaviour
     public CameraFollow runnerTeamFollow;
 
     [Header("Layout")]
-    public ArenaCameraLayout layout = ArenaCameraLayout.RunnerFull;
+    public ArenaCameraLayout layout = ArenaCameraLayout.Split;
 
     public Rect runnerViewport = new Rect(0f, 0f, 0.5f, 1f);
     public Rect throwerViewport = new Rect(0.5f, 0f, 0.5f, 1f);
@@ -140,8 +140,9 @@ public class SplitScreenManager : MonoBehaviour
         throwerCamera.enabled = true;
         throwerCamera.rect = throwerViewport;
 
-        SetupThrowerFollow(mouseLook: false);
-        WireRunnerTeamCameraInput(lockCursor: true);
+        // Klavye atici: sag panelde mouse look acik olsun.
+        SetupThrowerFollow(mouseLook: IsKeyboardControlledThrower());
+        WireRunnerTeamCameraInput(lockCursor: !IsKeyboardControlledThrower());
         WireThrowerMovementCamera();
     }
 
@@ -153,8 +154,7 @@ public class SplitScreenManager : MonoBehaviour
         throwerCamera.enabled = true;
         throwerCamera.rect = new Rect(0f, 0f, 1f, 1f);
 
-        bool gamepadThrower = HasThrowerGamepad();
-        SetupThrowerFollow(mouseLook: !gamepadThrower);
+        SetupThrowerFollow(mouseLook: IsKeyboardControlledThrower());
         WireThrowerMovementCamera();
 
         if (runnerTeamFollow != null)
@@ -210,12 +210,19 @@ public class SplitScreenManager : MonoBehaviour
         }
     }
 
+    bool IsKeyboardControlledThrower()
+    {
+        return throwerInput != null &&
+               throwerInput.scheme == ControlScheme.KeyboardMouse &&
+               throwerInput.enabled;
+    }
+
     bool HasThrowerGamepad()
     {
         if (throwerInput == null) return false;
+        if (throwerInput.scheme != ControlScheme.Gamepad) return false;
 
         int index = throwerInput.gamepadIndex;
-
         return index >= 0 && index < Gamepad.all.Count;
     }
 
@@ -246,9 +253,17 @@ public class SplitScreenManager : MonoBehaviour
         camObject.AddComponent<CameraShake>();
     }
 
+    public void EnsureThrowerCameraReady()
+    {
+        FindThrowerReferences();
+        EnsureThrowerCamera();
+        ApplyThrowerInvisibleCulling(throwerCamera);
+    }
+
     public static void RefreshThrowerCulling()
     {
-        if (Instance == null || Instance.throwerCamera == null) return;
+        if (Instance == null) return;
+        Instance.EnsureThrowerCamera();
         ApplyThrowerInvisibleCulling(Instance.throwerCamera);
     }
 

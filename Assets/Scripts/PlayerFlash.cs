@@ -161,8 +161,20 @@ public class PlayerFlash : MonoBehaviour
 
     public static void ApplyBlind(float duration)
     {
-        blindUntil = Time.unscaledTime + duration;
-        FlashBlindOverlay.Show(duration);
+        // Atıcı kamerasi hazir olsun; Tab ile bakinca overlay aninda gorunsun.
+        if (SplitScreenManager.Instance != null)
+        {
+            SplitScreenManager.Instance.EnsureThrowerCameraReady();
+        }
+
+        float until = Time.unscaledTime + Mathf.Max(0.2f, duration);
+        // Ust uste flash gelirse sureyi kisaltma.
+        if (until > blindUntil)
+        {
+            blindUntil = until;
+        }
+
+        FlashBlindOverlay.Show(Mathf.Max(0.2f, blindUntil - Time.unscaledTime));
     }
 
     public float GetCooldownPercent()
@@ -261,12 +273,32 @@ public class FlashProjectile : MonoBehaviour
         Destroy(gameObject);
     }
 
+    // Decoy / dis sistemler: ayni VFX + korluk, projectile olmadan.
+    public static void ExplodeAt(
+        Vector3 position,
+        float blindDuration = 2.4f,
+        float shakeDuration = 0.12f,
+        float shakeStrength = 0.18f)
+    {
+        SpawnStarburstStatic(position);
+        PlayerFlash.ApplyBlind(blindDuration);
+        CameraShake.ShakeAll(shakeDuration, shakeStrength);
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayHit();
+        }
+    }
+
     void SpawnStarburst(Vector3 position)
     {
-        // Merkez parlama.
-        SpawnGlowSphere(position, 0.35f, new Color(1f, 1f, 1f, 1f), 0.25f, 4.5f);
+        SpawnStarburstStatic(position);
+    }
 
-        // Mavi-beyaz isinlar (Yoru flash hissi).
+    static void SpawnStarburstStatic(Vector3 position)
+    {
+        SpawnGlowSphereStatic(position, 0.35f, new Color(1f, 1f, 1f, 1f), 0.25f, 4.5f);
+
         int rayCount = 16;
         for (int i = 0; i < rayCount; i++)
         {
@@ -278,25 +310,24 @@ public class FlashProjectile : MonoBehaviour
                 Color.white,
                 Random.Range(0.2f, 0.8f));
 
-            SpawnRay(position, angle, length, thickness, rayColor);
+            SpawnRayStatic(position, angle, length, thickness, rayColor);
         }
 
-        // Kisa ikincil isinlar.
         for (int i = 0; i < 10; i++)
         {
             float angle = Random.Range(0f, 360f);
-            SpawnRay(position, angle, Random.Range(1.0f, 2.0f), 0.03f,
+            SpawnRayStatic(position, angle, Random.Range(1.0f, 2.0f), 0.03f,
                 new Color(0.7f, 0.9f, 1f, 0.7f));
         }
     }
 
-    void SpawnGlowSphere(Vector3 position, float startScale, Color color, float duration, float endScale)
+    static void SpawnGlowSphereStatic(Vector3 position, float startScale, Color color, float duration, float endScale)
     {
         GameObject glow = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         glow.name = "FlashCore";
         glow.transform.position = position;
         glow.transform.localScale = Vector3.one * startScale;
-        Destroy(glow.GetComponent<Collider>());
+        Object.Destroy(glow.GetComponent<Collider>());
         SceneFolders.ParentTo(glow.transform, SceneFolders.RuntimeSpawned);
 
         Renderer rend = glow.GetComponent<Renderer>();
@@ -313,7 +344,7 @@ public class FlashProjectile : MonoBehaviour
         expand.startScale = startScale;
     }
 
-    void SpawnRay(Vector3 center, float angleDeg, float length, float thickness, Color color)
+    static void SpawnRayStatic(Vector3 center, float angleDeg, float length, float thickness, Color color)
     {
         Quaternion rot = Quaternion.Euler(0f, angleDeg, 0f);
         Vector3 dir = rot * Vector3.forward;
@@ -323,7 +354,7 @@ public class FlashProjectile : MonoBehaviour
         ray.transform.position = center + dir * (length * 0.5f);
         ray.transform.rotation = Quaternion.LookRotation(dir);
         ray.transform.localScale = new Vector3(thickness, thickness, length);
-        Destroy(ray.GetComponent<Collider>());
+        Object.Destroy(ray.GetComponent<Collider>());
         SceneFolders.ParentTo(ray.transform, SceneFolders.RuntimeSpawned);
 
         Renderer rend = ray.GetComponent<Renderer>();

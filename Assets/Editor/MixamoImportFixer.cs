@@ -23,11 +23,13 @@ public class MixamoImportFixer : AssetPostprocessor
 
         ModelImporter importer = (ModelImporter)assetImporter;
 
-        // Runner/SaverCharacter: cm olcekli Mixamo FBX.
+        // Runner/Saver/ThrowerCharacter: cm olcekli Mixamo FBX.
         // Import scale 1 birak; boyutu runtime modelScale + auto-fit ayarlar.
         // (globalScale 250 + humanDescription.globalScale 250 cift olcekleyip
         //  kemikleri kilometrelerce sisiriyordu.)
-        if (assetPath.Contains("RunnerCharacter") || assetPath.Contains("SaverCharacter"))
+        if (assetPath.Contains("RunnerCharacter") ||
+            assetPath.Contains("SaverCharacter") ||
+            assetPath.Contains("ThrowerCharacter"))
         {
             if (FbxLooksRigged(assetPath))
             {
@@ -159,14 +161,15 @@ public class MixamoImportFixer : AssetPostprocessor
     }
 }
 
-// Runner/SaverCharacter henuz import edilmediyse veya Humanoid map bos ise otomatik tetikler.
+// Role karakterleri henuz import edilmediyse veya Humanoid map bos ise otomatik tetikler.
 [InitializeOnLoad]
 static class RoleCharacterImportEnsurer
 {
     static readonly string[] ModelPaths =
     {
         "Assets/Resources/Models/RunnerCharacter.fbx",
-        "Assets/Resources/Models/SaverCharacter.fbx"
+        "Assets/Resources/Models/SaverCharacter.fbx",
+        "Assets/Resources/Models/ThrowerCharacter.fbx"
     };
 
     static RoleCharacterImportEnsurer()

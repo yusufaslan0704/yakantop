@@ -1250,7 +1250,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SplitScreenManager
   runnerTeamCamera: {fileID: 330585545}
   runnerTeamFollow: {fileID: 330585548}
-  layout: 2
+  layout: 0
   runnerViewport:
     serializedVersion: 2
     x: 0
@@ -3584,6 +3584,9 @@ GameObject:
   - component: {fileID: 2016876425}
   - component: {fileID: 2016876426}
   - component: {fileID: 2016876427}
+  - component: {fileID: 2016876428}
+  - component: {fileID: 2016876429}
+  - component: {fileID: 2016876430}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -3931,6 +3934,108 @@ MonoBehaviour:
   fillSmoothSpeed: 16
   readyPulseSpeed: 4.5
   readyFlashDuration: 0.28
+--- !u!114 &2016876428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2016876414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a64789b0c1d2e3f4a50604, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityCooldownUI
+  abilityType: 3
+  widgetRoot: {fileID: 0}
+  barBackground: {fileID: 0}
+  barTrack: {fileID: 0}
+  barFill: {fileID: 0}
+  barGlow: {fileID: 0}
+  labelText: {fileID: 0}
+  keyHintText: {fileID: 0}
+  backgroundColor: {r: 0.04, g: 0.06, b: 0.1, a: 0.72}
+  trackColor: {r: 0.12, g: 0.16, b: 0.22, a: 0.95}
+  fillCooldownColor: {r: 0.2, g: 0.55, b: 0.7, a: 0.95}
+  fillReadyColor: {r: 0.45, g: 0.9, b: 1, a: 1}
+  fillActiveColor: {r: 0.75, g: 0.95, b: 1, a: 1}
+  glowReadyColor: {r: 0.4, g: 0.85, b: 1, a: 0.4}
+  labelReadyColor: {r: 0.92, g: 0.88, b: 1, a: 1}
+  labelCooldownColor: {r: 0.55, g: 0.62, b: 0.7, a: 0.9}
+  barSize: {x: 260, y: 12}
+  barBottomOffset: 188
+  fillInset: 2
+  fillSmoothSpeed: 16
+  readyPulseSpeed: 4.5
+  readyFlashDuration: 0.28
+--- !u!114 &2016876429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2016876414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a64789b0c1d2e3f4a50604, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityCooldownUI
+  abilityType: 4
+  widgetRoot: {fileID: 0}
+  barBackground: {fileID: 0}
+  barTrack: {fileID: 0}
+  barFill: {fileID: 0}
+  barGlow: {fileID: 0}
+  labelText: {fileID: 0}
+  keyHintText: {fileID: 0}
+  backgroundColor: {r: 0.04, g: 0.06, b: 0.1, a: 0.72}
+  trackColor: {r: 0.12, g: 0.16, b: 0.22, a: 0.95}
+  fillCooldownColor: {r: 0.85, g: 0.35, b: 0.2, a: 0.95}
+  fillReadyColor: {r: 1, g: 0.55, b: 0.3, a: 1}
+  fillActiveColor: {r: 1, g: 0.85, b: 0.55, a: 1}
+  glowReadyColor: {r: 1, g: 0.45, b: 0.2, a: 0.4}
+  labelReadyColor: {r: 0.92, g: 0.88, b: 1, a: 1}
+  labelCooldownColor: {r: 0.55, g: 0.62, b: 0.7, a: 0.9}
+  barSize: {x: 260, y: 12}
+  barBottomOffset: 52
+  fillInset: 2
+  fillSmoothSpeed: 16
+  readyPulseSpeed: 4.5
+  readyFlashDuration: 0.28
+--- !u!114 &2016876430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2016876414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a64789b0c1d2e3f4a50604, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityCooldownUI
+  abilityType: 5
+  widgetRoot: {fileID: 0}
+  barBackground: {fileID: 0}
+  barTrack: {fileID: 0}
+  barFill: {fileID: 0}
+  barGlow: {fileID: 0}
+  labelText: {fileID: 0}
+  keyHintText: {fileID: 0}
+  backgroundColor: {r: 0.04, g: 0.06, b: 0.1, a: 0.72}
+  trackColor: {r: 0.12, g: 0.16, b: 0.22, a: 0.95}
+  fillCooldownColor: {r: 0.75, g: 0.3, b: 0.15, a: 0.95}
+  fillReadyColor: {r: 1, g: 0.45, b: 0.2, a: 1}
+  fillActiveColor: {r: 1, g: 0.7, b: 0.35, a: 1}
+  glowReadyColor: {r: 1, g: 0.4, b: 0.15, a: 0.4}
+  labelReadyColor: {r: 0.92, g: 0.88, b: 1, a: 1}
+  labelCooldownColor: {r: 0.55, g: 0.62, b: 0.7, a: 0.9}
+  barSize: {x: 260, y: 12}
+  barBottomOffset: 86
+  fillInset: 2
+  fillSmoothSpeed: 16
+  readyPulseSpeed: 4.5
+  readyFlashDuration: 0.28
 --- !u!1 &2130826851
 GameObject:
   m_ObjectHideFlags: 0
@@ -4128,10 +4233,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a76759d63094109ab78283564ba7396, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterModelVisual
-  modelResourcePath: Models/Idle
-  modelScale: 1
+  modelResourcePath: Models/ThrowerCharacter
+  modelScale: 250
   useRunnerDefaultModel: 1
-  fallbackToAnimatedIfStatic: 1
+  fallbackToAnimatedIfStatic: 0
   autoFitStaticModel: 1
   modelYOffset: -1
   transitionSpeed: 8

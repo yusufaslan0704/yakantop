@@ -6,10 +6,13 @@ public enum AbilityBarType
 {
     Flash,
     Shield,
-    Invisibility
+    Invisibility,
+    Decoy,
+    Volley,
+    Trap
 }
 
-// Flash (E) / Shield (G) / Invis (V) cooldown barlari.
+// Flash/Shield/Invis/Decoy (kacan) + Volley (atici) cooldown barlari.
 public class AbilityCooldownUI : MonoBehaviour
 {
     [Header("Ability")]
@@ -37,6 +40,8 @@ public class AbilityCooldownUI : MonoBehaviour
     [Header("Layout")]
     public Vector2 barSize = new Vector2(260f, 12f);
     public float barBottomOffset = 18f;
+    public float loadoutBarBaseOffset = 18f;
+    public float loadoutBarStep = 34f;
     public float fillInset = 2f;
 
     [Header("Animation")]
@@ -52,6 +57,9 @@ public class AbilityCooldownUI : MonoBehaviour
     PlayerFlash flash;
     PlayerShield shield;
     PlayerInvisibility invis;
+    PlayerDecoy decoy;
+    PlayerVolley volley;
+    PlayerTrap trap;
 
     void Awake()
     {
@@ -75,6 +83,28 @@ public class AbilityCooldownUI : MonoBehaviour
         {
             SetVisible(false);
             return;
+        }
+
+        // Loadout: secili kacan yeteneklerini altta ust uste dizer.
+        if (abilityType != AbilityBarType.Volley && abilityType != AbilityBarType.Trap)
+        {
+            int slot = AbilityLoadout.HudSlot(abilityType);
+            if (slot < 0)
+            {
+                SetVisible(false);
+                return;
+            }
+
+            float targetY = loadoutBarBaseOffset + slot * loadoutBarStep;
+            if (Mathf.Abs(barBottomOffset - targetY) > 0.1f ||
+                (widgetRoot != null && Mathf.Abs(widgetRoot.anchoredPosition.y - targetY) > 0.1f))
+            {
+                barBottomOffset = targetY;
+                if (widgetRoot != null)
+                {
+                    widgetRoot.anchoredPosition = new Vector2(0f, barBottomOffset);
+                }
+            }
         }
 
         SetVisible(true);
@@ -105,6 +135,9 @@ public class AbilityCooldownUI : MonoBehaviour
             case AbilityBarType.Flash: return flash != null && flash.enabled;
             case AbilityBarType.Shield: return shield != null && shield.enabled;
             case AbilityBarType.Invisibility: return invis != null && invis.enabled;
+            case AbilityBarType.Decoy: return decoy != null && decoy.enabled;
+            case AbilityBarType.Volley: return volley != null && volley.enabled;
+            case AbilityBarType.Trap: return trap != null && trap.enabled;
             default: return false;
         }
     }
@@ -116,6 +149,9 @@ public class AbilityCooldownUI : MonoBehaviour
             case AbilityBarType.Flash: return flash.GetCooldownPercent();
             case AbilityBarType.Shield: return shield.GetCooldownPercent();
             case AbilityBarType.Invisibility: return invis.GetCooldownPercent();
+            case AbilityBarType.Decoy: return decoy.GetCooldownPercent();
+            case AbilityBarType.Volley: return volley.GetCooldownPercent();
+            case AbilityBarType.Trap: return trap.GetCooldownPercent();
             default: return 0f;
         }
     }
@@ -127,6 +163,9 @@ public class AbilityCooldownUI : MonoBehaviour
             case AbilityBarType.Flash: return flash.IsReady;
             case AbilityBarType.Shield: return shield.IsReady;
             case AbilityBarType.Invisibility: return invis.IsReady;
+            case AbilityBarType.Decoy: return decoy.IsReady;
+            case AbilityBarType.Volley: return volley.IsReady;
+            case AbilityBarType.Trap: return trap.IsReady;
             default: return false;
         }
     }
@@ -138,6 +177,9 @@ public class AbilityCooldownUI : MonoBehaviour
             case AbilityBarType.Flash: return flash.IsFlashing;
             case AbilityBarType.Shield: return shield.IsShieldActive;
             case AbilityBarType.Invisibility: return invis.IsInvisible;
+            case AbilityBarType.Decoy: return decoy.IsDecoyActive;
+            case AbilityBarType.Volley: return volley.IsFiring;
+            case AbilityBarType.Trap: return trap.IsFiring;
             default: return false;
         }
     }
@@ -166,6 +208,27 @@ public class AbilityCooldownUI : MonoBehaviour
                 fillActiveColor = new Color(0.9f, 0.85f, 1f, 1f);
                 glowReadyColor = new Color(0.65f, 0.5f, 1f, 0.4f);
                 barBottomOffset = 154f;
+                break;
+            case AbilityBarType.Decoy:
+                fillCooldownColor = new Color(0.2f, 0.55f, 0.7f, 0.95f);
+                fillReadyColor = new Color(0.45f, 0.9f, 1f, 1f);
+                fillActiveColor = new Color(0.75f, 0.95f, 1f, 1f);
+                glowReadyColor = new Color(0.4f, 0.85f, 1f, 0.4f);
+                barBottomOffset = 188f;
+                break;
+            case AbilityBarType.Volley:
+                fillCooldownColor = new Color(0.85f, 0.35f, 0.2f, 0.95f);
+                fillReadyColor = new Color(1f, 0.55f, 0.3f, 1f);
+                fillActiveColor = new Color(1f, 0.85f, 0.55f, 1f);
+                glowReadyColor = new Color(1f, 0.45f, 0.2f, 0.4f);
+                barBottomOffset = 52f;
+                break;
+            case AbilityBarType.Trap:
+                fillCooldownColor = new Color(0.75f, 0.3f, 0.15f, 0.95f);
+                fillReadyColor = new Color(1f, 0.45f, 0.2f, 1f);
+                fillActiveColor = new Color(1f, 0.7f, 0.35f, 1f);
+                glowReadyColor = new Color(1f, 0.4f, 0.15f, 0.4f);
+                barBottomOffset = 86f;
                 break;
         }
     }
@@ -274,6 +337,9 @@ public class AbilityCooldownUI : MonoBehaviour
             case AbilityBarType.Flash: return "FLASH";
             case AbilityBarType.Shield: return "SHIELD";
             case AbilityBarType.Invisibility: return "INVIS";
+            case AbilityBarType.Decoy: return "DECOY";
+            case AbilityBarType.Volley: return "VOLLEY";
+            case AbilityBarType.Trap: return "TRAP";
             default: return "ABILITY";
         }
     }
@@ -285,6 +351,9 @@ public class AbilityCooldownUI : MonoBehaviour
             case AbilityBarType.Flash: return "E";
             case AbilityBarType.Shield: return "G";
             case AbilityBarType.Invisibility: return "V";
+            case AbilityBarType.Decoy: return "X";
+            case AbilityBarType.Volley: return "RM";
+            case AbilityBarType.Trap: return "B";
             default: return "?";
         }
     }
@@ -324,6 +393,31 @@ public class AbilityCooldownUI : MonoBehaviour
     {
         foreach (PlayerRole player in PlayerManager.All)
         {
+            if (abilityType == AbilityBarType.Volley || abilityType == AbilityBarType.Trap)
+            {
+                if (player.roleType != RoleType.Thrower) continue;
+                if (abilityType == AbilityBarType.Volley)
+                {
+                    PlayerVolley v = player.GetComponent<PlayerVolley>();
+                    if (v != null && v.enabled)
+                    {
+                        volley = v;
+                        return;
+                    }
+                }
+                else
+                {
+                    PlayerTrap t = player.GetComponent<PlayerTrap>();
+                    if (t != null && t.enabled)
+                    {
+                        trap = t;
+                        return;
+                    }
+                }
+
+                continue;
+            }
+
             if (player.roleType != RoleType.Runner && player.roleType != RoleType.Saver) continue;
 
             switch (abilityType)
@@ -344,6 +438,12 @@ public class AbilityCooldownUI : MonoBehaviour
                 {
                     PlayerInvisibility i = player.GetComponent<PlayerInvisibility>();
                     if (i != null && i.enabled) { invis = i; return; }
+                    break;
+                }
+                case AbilityBarType.Decoy:
+                {
+                    PlayerDecoy d = player.GetComponent<PlayerDecoy>();
+                    if (d != null && d.enabled) { decoy = d; return; }
                     break;
                 }
             }

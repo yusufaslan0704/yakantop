@@ -165,6 +165,7 @@ public class PlayerDodge : MonoBehaviour
         float speed = Mathf.Max(12f, ballRb.linearVelocity.magnitude);
         ballRb.linearVelocity = deflectDirection * speed * deflectSpeedMultiplier;
 
+        CombatVfx.SpawnParryRing(transform.position);
         CameraShake.ShakeAll(deflectShakeDuration, deflectShakeStrength);
         CameraShake.PunchFovAll(dodgeFovPunch + 1.5f, 0.12f);
     }

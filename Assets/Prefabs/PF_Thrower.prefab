@@ -57,6 +57,8 @@ GameObject:
   - component: {fileID: 4016620195025475889}
   - component: {fileID: 6527117488020963552}
   - component: {fileID: 2912135233202540925}
+  - component: {fileID: 910700009}
+  - component: {fileID: 910700010}
   m_Layer: 0
   m_Name: PF_Thrower
   m_TagString: Player
@@ -412,11 +414,17 @@ MonoBehaviour:
   - Kacamazsin!
   - "S\u0131radaki!"
   - <3
-  displayDuration: 2
-  heightOffset: 2.7
-  textSize: 0.35
-  textColor: {r: 1, g: 1, b: 1, a: 1}
-  cooldown: 0.8
+  - GG
+  - Al bunu!
+  - Wow!
+  - ...
+  displayDuration: 1.6
+  heightOffset: 2.55
+  textSize: 0.16
+  fontSize: 64
+  textColor: {r: 0.95, g: 0.98, b: 1, a: 1}
+  outlineColor: {r: 0.02, g: 0.04, b: 0.08, a: 0.95}
+  cooldown: 0.75
 --- !u!114 &6527117488020963552
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -453,10 +461,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a76759d63094109ab78283564ba7396, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterModelVisual
-  modelResourcePath: Models/Idle
-  modelScale: 1
+  modelResourcePath: Models/ThrowerCharacter
+  modelScale: 250
   useRunnerDefaultModel: 1
-  fallbackToAnimatedIfStatic: 1
+  fallbackToAnimatedIfStatic: 0
   autoFitStaticModel: 1
   modelYOffset: -1
   transitionSpeed: 8
@@ -482,6 +490,48 @@ MonoBehaviour:
   dashLeanAngle: 22
   dashLeanSpeed: 18
   groundCheckDistance: 1.15
+--- !u!114 &910700009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5872251022134843359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a64789b0c1d2e3f4a50609, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerVolley
+  cooldown: 11
+  spreadDegrees: 20
+  ballCount: 3
+  fastBallData: {fileID: 11400000, guid: e8e1447e0d9a47769f3dfa9dbbf7047f, type: 2}
+  throwForce: 62
+  loft: 0.12
+  shakeDuration: 0.1
+  shakeStrength: 0.14
+--- !u!114 &910700010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5872251022134843359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a64789b0c1d2e3f4a5060a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTrap
+  cooldown: 12
+  trapRadius: 3.2
+  trapDuration: 4.5
+  speedMultiplier: 0.42
+  ballData: {fileID: 11400000, guid: 19eae1ddcdc24c11b037a94e2d98fe66, type: 2}
+  throwForce: 48
+  loft: 0.18
+  shakeDuration: 0.08
+  shakeStrength: 0.1
+  ballTint: {r: 1, g: 0.4, b: 0.15, a: 1}
 --- !u!1 &9072323767613640300
 GameObject:
   m_ObjectHideFlags: 0

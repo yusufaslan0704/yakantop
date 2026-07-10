@@ -55,6 +55,8 @@ Yerel asimetrik dodgeball prototipi:
 - Day 7 Windows smoke build: `Builds/WindowsSmoke/Yakantop.exe`
 - Day 8 feel polish: dash/dodge/throw/hit-stop/FOV punch
 - Day 9 UI/UX: ortak palet, HUD outline, end-game kart, charge/revive bar
+- Day 10 yetenekler: Flash / Shield / Invis
+- Day 12 arena/VFX: hourglass neon, SafeZone rim pulse, CombatVfx sparks/parry/shield/elim
 
 ---
 
@@ -97,5 +99,7 @@ Yerel asimetrik dodgeball prototipi:
 | `Docs/Bug_List.md` | Açık / kapalı buglar |
 | `Docs/Missing_Assets_List.md` | Asset eksikleri |
 | `Docs/Day10_Abilities_Flash_Shield.md` | Flash / Shield / Invis |
+| `Docs/Day11_Polish_Smoke.md` | BallData SFX + smoke rebuild |
+| `Docs/Day12_Arena_VFX_Polish.md` | Arena neon + combat VFX |
 | `Docs/InputSystem_Actions_Note.md` | Input actions bilinçli unused |
 | `Docs/Current_State.md` | Bu dosya — güncel durum |

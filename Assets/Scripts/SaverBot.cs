@@ -214,6 +214,7 @@ public class SaverBot : MonoBehaviour
         {
             if (player == null || player.roleType != RoleType.Runner) continue;
             if (player.Health == null || !player.Health.IsEliminated) continue;
+            if (DecoyClone.IsDecoy(player)) continue;
 
             float sqr = (player.transform.position - transform.position).sqrMagnitude;
             if (sqr < bestSqr)

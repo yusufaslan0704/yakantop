@@ -115,6 +115,7 @@ public class PlayerShield : MonoBehaviour
         if (playFeedback)
         {
             OnShieldBroken?.Invoke();
+            CombatVfx.SpawnShieldBreak(transform.position, bubbleRimColor);
             CameraShake.ShakeAll(0.1f, 0.16f);
             CameraShake.PunchFovAll(3f, 0.12f);
         }

@@ -18,8 +18,11 @@ public class SafeZone : MonoBehaviour
     [Header("Gorsel (istege bagli)")]
     [Tooltip("Cep zemini: koruma doluyken mavi, tukenince gri olur.")]
     public Renderer floorRenderer;
+    public Renderer[] rimRenderers;
     public Color chargedColor = new Color(0.16f, 0.45f, 0.80f);
     public Color depletedColor = new Color(0.35f, 0.37f, 0.40f);
+    public Color rimChargedColor = new Color(0.25f, 0.75f, 1f, 1f);
+    public Color rimDepletedColor = new Color(0.4f, 0.42f, 0.45f, 1f);
 
     private static readonly List<SafeZone> zones = new List<SafeZone>();
 
@@ -123,23 +126,72 @@ public class SafeZone : MonoBehaviour
 
     void UpdateFloorColor()
     {
-        if (floorRenderer == null) return;
-
         // Iceride butcesi tukenmis biri varsa gri, yoksa mavi.
         bool anyDepleted = false;
+        float lowestPercent = 1f;
 
         foreach (PlayerHealth player in playersInside)
         {
-            if (player != null && stayTime.TryGetValue(player, out float time) && time >= maxStayDuration)
+            if (player == null) continue;
+
+            float percent = GetProtectionPercent(player);
+            lowestPercent = Mathf.Min(lowestPercent, percent);
+
+            if (stayTime.TryGetValue(player, out float time) && time >= maxStayDuration)
             {
                 anyDepleted = true;
-                break;
             }
+        }
+
+        if (playersInside.Count == 0)
+        {
+            lowestPercent = 1f;
         }
 
         Color target = anyDepleted ? depletedColor : chargedColor;
 
-        floorRenderer.material.color = Color.Lerp(floorRenderer.material.color, target, 6f * Time.deltaTime);
+        if (floorRenderer != null)
+        {
+            floorRenderer.material.color = Color.Lerp(floorRenderer.material.color, target, 6f * Time.deltaTime);
+        }
+
+        UpdateRimPulse(anyDepleted, lowestPercent);
+    }
+
+    void UpdateRimPulse(bool depleted, float chargePercent)
+    {
+        if (rimRenderers == null || rimRenderers.Length == 0)
+        {
+            return;
+        }
+
+        float pulse = depleted
+            ? 0.55f
+            : 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * (2.5f + (1f - chargePercent) * 6f));
+
+        Color rimTarget = Color.Lerp(rimDepletedColor, rimChargedColor, depleted ? 0.15f : chargePercent);
+        rimTarget *= pulse;
+
+        foreach (Renderer rim in rimRenderers)
+        {
+            if (rim == null) continue;
+
+            Material mat = rim.material;
+            if (mat.HasProperty("_BaseColor"))
+            {
+                mat.SetColor("_BaseColor", Color.Lerp(mat.GetColor("_BaseColor"), rimTarget, 8f * Time.deltaTime));
+            }
+            else
+            {
+                mat.color = Color.Lerp(mat.color, rimTarget, 8f * Time.deltaTime);
+            }
+
+            if (mat.HasProperty("_EmissionColor"))
+            {
+                mat.EnableKeyword("_EMISSION");
+                mat.SetColor("_EmissionColor", rimTarget * (depleted ? 0.4f : 1.6f * pulse));
+            }
+        }
     }
 
     // Ball.cs carpmada bunu sorar: oyuncu su an korunuyor mu?

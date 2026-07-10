@@ -122,6 +122,7 @@ public class TeamControlManager : MonoBehaviour
         PlayerFlash flash = player.GetComponent<PlayerFlash>();
         PlayerShield shield = player.GetComponent<PlayerShield>();
         PlayerInvisibility invis = player.GetComponent<PlayerInvisibility>();
+        PlayerDecoy decoy = player.GetComponent<PlayerDecoy>();
 
         // Ayni klavyeyi dinledikleri icin sadece kontrol edilen karakter
         // ziplayip egilebilir ve emote atabilir.
@@ -132,6 +133,7 @@ public class TeamControlManager : MonoBehaviour
         if (flash != null) flash.enabled = isControlled;
         if (shield != null) shield.enabled = isControlled;
         if (invis != null) invis.enabled = isControlled;
+        if (decoy != null) decoy.enabled = isControlled;
 
         if (movement != null)
         {

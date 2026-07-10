@@ -1,8 +1,9 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 // Runner/Saver: V ile 4 sn görünmezlik.
-// Atıcı kamerası layer cull ile görmez; bot hedef almaz.
-// Materyal degistirilmez (URP magenta bug'ini onlemek icin).
+// Atıcı kamerası layer cull ile tamamen görmez; bot hedef almaz.
+// Kendi (kaçan) kamerasında karakter ghost/şeffaf kalır — oyuncu görünmezliği hisseder.
 public class PlayerInvisibility : MonoBehaviour
 {
     public const string InvisibleLayerName = "InvisibleToThrower";
@@ -10,6 +11,11 @@ public class PlayerInvisibility : MonoBehaviour
     [Header("Invisibility")]
     public float duration = 4f;
     public float cooldown = 12f;
+
+    [Header("Self Feedback")]
+    [Range(0.08f, 0.7f)]
+    [Tooltip("Kaçan kamerasında karakterin şeffaflık seviyesi (atıçı hiç görmez).")]
+    public float selfGhostAlpha = 0.32f;
 
     public bool IsReady => Time.unscaledTime >= nextReadyTime && !IsInvisible;
     public bool IsInvisible { get; private set; }
@@ -23,6 +29,10 @@ public class PlayerInvisibility : MonoBehaviour
     float invisibleUntil;
     int[] originalLayers;
     Transform[] layeredTransforms;
+
+    Renderer[] ghostRenderers;
+    Material[][] originalSharedMaterials;
+    Material[][] ghostSharedMaterials;
 
     PlayerHealth playerHealth;
     PlayerInputHandler inputHandler;
@@ -77,7 +87,8 @@ public class PlayerInvisibility : MonoBehaviour
         nextReadyTime = Time.unscaledTime + cooldown;
 
         ApplyInvisibleLayer();
-        SplitScreenManager.RefreshThrowerCulling();
+        ApplySelfGhost();
+        EnsureThrowerCameraCulls();
 
         OnInvisibilityStarted?.Invoke();
         CameraShake.ShakeAll(0.05f, 0.06f);
@@ -94,9 +105,22 @@ public class PlayerInvisibility : MonoBehaviour
 
         IsInvisible = false;
         invisibleUntil = 0f;
+        RestoreSelfGhost();
         RestoreLayers();
-        SplitScreenManager.RefreshThrowerCulling();
+        EnsureThrowerCameraCulls();
         OnInvisibilityEnded?.Invoke();
+    }
+
+    void EnsureThrowerCameraCulls()
+    {
+        // RunnerFull'da thrower kamerasi kapali olsa bile cull mask hazir olsun;
+        // Tab ile split'e gecince aninda gizli kalsin.
+        if (SplitScreenManager.Instance != null)
+        {
+            SplitScreenManager.Instance.EnsureThrowerCameraReady();
+        }
+
+        SplitScreenManager.RefreshThrowerCulling();
     }
 
     void ApplyInvisibleLayer()
@@ -129,6 +153,136 @@ public class PlayerInvisibility : MonoBehaviour
 
         layeredTransforms = null;
         originalLayers = null;
+    }
+
+    // Kaçan kamerasi karakteri hala cizer; alpha dusuk ghost ile "gorunmezim" hissi verir.
+    // Atici kamerasi ayni layer'i cull ettigi icin bu materyalleri hic gormez.
+    void ApplySelfGhost()
+    {
+        RestoreSelfGhost();
+
+        Renderer[] all = GetComponentsInChildren<Renderer>(true);
+        int count = 0;
+        for (int i = 0; i < all.Length; i++)
+        {
+            if (IsBodyRenderer(all[i])) count++;
+        }
+
+        if (count == 0) return;
+
+        ghostRenderers = new Renderer[count];
+        originalSharedMaterials = new Material[count][];
+        ghostSharedMaterials = new Material[count][];
+
+        int index = 0;
+        for (int i = 0; i < all.Length; i++)
+        {
+            Renderer rend = all[i];
+            if (!IsBodyRenderer(rend)) continue;
+
+            ghostRenderers[index] = rend;
+            Material[] shared = rend.sharedMaterials;
+            originalSharedMaterials[index] = shared;
+
+            Material[] ghosts = new Material[shared.Length];
+            for (int m = 0; m < shared.Length; m++)
+            {
+                Material source = shared[m];
+                if (source == null)
+                {
+                    ghosts[m] = null;
+                    continue;
+                }
+
+                Material ghost = new Material(source);
+                ghost.name = source.name + " (InvisGhost)";
+                Color baseColor = ReadColor(ghost);
+                baseColor.a = selfGhostAlpha;
+                SetupTransparent(ghost, baseColor);
+                ghosts[m] = ghost;
+            }
+
+            ghostSharedMaterials[index] = ghosts;
+            rend.sharedMaterials = ghosts;
+            index++;
+        }
+    }
+
+    void RestoreSelfGhost()
+    {
+        if (ghostRenderers == null) return;
+
+        for (int i = 0; i < ghostRenderers.Length; i++)
+        {
+            Renderer rend = ghostRenderers[i];
+            Material[] originals = originalSharedMaterials != null ? originalSharedMaterials[i] : null;
+            Material[] ghosts = ghostSharedMaterials != null ? ghostSharedMaterials[i] : null;
+
+            if (rend != null && originals != null)
+            {
+                rend.sharedMaterials = originals;
+            }
+
+            if (ghosts != null)
+            {
+                for (int m = 0; m < ghosts.Length; m++)
+                {
+                    if (ghosts[m] != null)
+                    {
+                        Destroy(ghosts[m]);
+                    }
+                }
+            }
+        }
+
+        ghostRenderers = null;
+        originalSharedMaterials = null;
+        ghostSharedMaterials = null;
+    }
+
+    static bool IsBodyRenderer(Renderer rend)
+    {
+        if (rend == null) return false;
+        // Particle / trail / line gibi efektleri dokunma.
+        return rend is MeshRenderer || rend is SkinnedMeshRenderer;
+    }
+
+    static Color ReadColor(Material mat)
+    {
+        if (mat.HasProperty("_BaseColor")) return mat.GetColor("_BaseColor");
+        if (mat.HasProperty("_Color")) return mat.GetColor("_Color");
+        return mat.color;
+    }
+
+    static void SetupTransparent(Material mat, Color color)
+    {
+        if (mat.HasProperty("_Surface"))
+        {
+            mat.SetFloat("_Surface", 1f);
+            mat.SetFloat("_Blend", 0f);
+            mat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.renderQueue = 3000;
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        }
+        else
+        {
+            // Built-in Standard fallback.
+            mat.SetFloat("_Mode", 3f);
+            mat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.DisableKeyword("_ALPHATEST_ON");
+            mat.EnableKeyword("_ALPHABLEND_ON");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            mat.renderQueue = 3000;
+        }
+
+        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
+        if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
+        mat.color = color;
     }
 
     public float GetCooldownPercent()
@@ -182,6 +336,7 @@ public class PlayerInvisibility : MonoBehaviour
     {
         if (IsInvisible)
         {
+            RestoreSelfGhost();
             RestoreLayers();
         }
     }

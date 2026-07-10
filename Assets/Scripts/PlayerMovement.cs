@@ -114,6 +114,11 @@ public class PlayerMovement : MonoBehaviour
             speed *= playerDuck.duckSpeedMultiplier;
         }
 
+        // Trap alani: kacanlari yavaslat.
+        PlayerRole role = GetComponent<PlayerRole>();
+        RoleType? roleType = role != null ? role.roleType : (RoleType?)null;
+        speed *= TrapZone.GetSpeedMultiplier(transform.position, roleType);
+
         Vector3 velocity = moveDirection * speed;
         velocity.y = rb.linearVelocity.y; // Yerçekimini koru.
 
