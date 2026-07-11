@@ -1,6 +1,6 @@
 # Yakantop — Current State
 
-**Güncelleme:** 9 Temmuz 2026 (Proje Audit sonrası)  
+**Güncelleme:** 11 Temmuz 2026  
 **Unity:** 6000.5.2f1 · URP · tek sahne `Yakantop.unity`
 
 ---
@@ -57,6 +57,15 @@ Yerel asimetrik dodgeball prototipi:
 - Day 9 UI/UX: ortak palet, HUD outline, end-game kart, charge/revive bar
 - Day 10 yetenekler: Flash / Shield / Invis
 - Day 12 arena/VFX: hourglass neon, SafeZone rim pulse, CombatVfx sparks/parry/shield/elim
+- Day 13 thrower aim: charge yörünge önizlemesi, Image reticle, hedef foot-ring
+- Thrower zone movement: insan atıcı bölge içinde gezer; bot atışlar arası reposition + koşu animasyonu
+- Thrower yüksek atış (7): sağ tık yüksel → sol tık Fast
+- Thrower combo select: 2 özellik (sarı + yeşil), örn. Yüksek + Sekten
+- Combo UI polish: yetenek tuş ipucu + CD satır + durum satırı; Yüksek’te Volley kapalı (UI’da net)
+- Thrower görünmez (8): V ile kaçan kamerasından gizlen
+- Thrower fake (9): Q ile sahte atış, dodge bait
+- Thrower gölge (10): X ile blink + gölgeden çapraz echo atış
+- Script yapısı: `Core/Arena/Thrower/Runner/Combat/Shared/UI/VFX` + `ThrowerAbilityRegistry`
 
 ---
 
@@ -101,5 +110,10 @@ Yerel asimetrik dodgeball prototipi:
 | `Docs/Day10_Abilities_Flash_Shield.md` | Flash / Shield / Invis |
 | `Docs/Day11_Polish_Smoke.md` | BallData SFX + smoke rebuild |
 | `Docs/Day12_Arena_VFX_Polish.md` | Arena neon + combat VFX |
+| `Docs/Day13_Thrower_Aim_Feedback.md` | Atıcı yörünge / reticle / hedef highlight |
+| `Docs/Thrower_Zone_Movement.md` | Atıcı bölge içi hareket |
+| `Docs/Thrower_Combo_Select.md` | Atıcı çift seçim (sarı/yeşil) |
+| `Docs/Script_Structure.md` | Scripts klasör yapısı + ability registry |
+| `Docs/Ball_Select_UI.md` | Atıcı top türü seçim listesi |
 | `Docs/InputSystem_Actions_Note.md` | Input actions bilinçli unused |
 | `Docs/Current_State.md` | Bu dosya — güncel durum |

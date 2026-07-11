@@ -359,6 +359,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: dd708dd10fcb4ae9af89ac7f7e5a5865, type: 2}
   - {fileID: 11400000, guid: b812ac0878514fe8bb963a3c1050cf21, type: 2}
   - {fileID: 11400000, guid: e4337708e8f9437baad94b251c6966b7, type: 2}
+  - {fileID: 11400000, guid: 7e6d5c4b3a2918079685746352413021, type: 2}
   baseThrowInterval: 2.5
   throwIntervalRandomOffset: 0.35
   aimHeightOffset: 1
@@ -468,7 +469,7 @@ MonoBehaviour:
   autoFitStaticModel: 1
   modelYOffset: -1
   transitionSpeed: 8
-  runSpeedThreshold: 1
+  runSpeedThreshold: 0.35
   idleClipPath: Models/Idle
   runClipPath: Models/Running
   jumpClipPath: Models/Jump

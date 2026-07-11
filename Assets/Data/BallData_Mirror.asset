@@ -10,19 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3612aeb2a30479494ee2498b272c68c, type: 3}
-  m_Name: BallData_Curve
+  m_Name: BallData_Mirror
   m_EditorClassIdentifier: 
-  ballName: Egri Top
-  prefab: {fileID: 289847871389453925, guid: 05436a8951dd4a4cadb3070e352ee9c5, type: 3}
+  ballName: Ayna Top
+  prefab: {fileID: 289847871389453925, guid: a9b8c7d6e5f4321098765432fedcba01, type: 3}
   throwForce: 30
-  cooldownMultiplier: 1.15
-  chance: 20
-  hitShakeDuration: 0.17
-  hitShakeStrength: 0.25
-  knockbackForce: 4.8
-  hitStopDuration: 0.065
-  throwSfx: {fileID: 8300000, guid: cccf2a91c05206446952f998794a68a0, type: 3}
+  cooldownMultiplier: 1.2
+  chance: 18
+  hitShakeDuration: 0.16
+  hitShakeStrength: 0.26
+  knockbackForce: 5
+  hitStopDuration: 0.07
+  throwSfx: {fileID: 8300000, guid: 37f8a371cddd6e54f8b1527147952e5c, type: 3}
   hitSfx: {fileID: 8300000, guid: 9cdf0c7f9f2d4814a921e1568b753b03, type: 3}
   maxBounces: 0
   bounceSpeedKeep: 0.8
-  curveForce: 68
+  curveForce: 0
+  mirrorReturn: 1
