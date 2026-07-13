@@ -228,11 +228,18 @@ public class GameUI : MonoBehaviour
         text.enableWordWrapping = true;
         text.raycastTarget = false;
 
-        // Bazi TMP fontlari outline desteklemez; NRE olmasin.
-        if (text.fontSharedMaterial != null)
+        // Bazi TMP font / material kombinasyonlari outline'da NRE atar.
+        try
         {
-            text.outlineWidth = 0.22f;
-            text.outlineColor = UIColorPalette.Outline;
+            if (text.font != null && text.fontSharedMaterial != null)
+            {
+                text.outlineWidth = 0.22f;
+                text.outlineColor = UIColorPalette.Outline;
+            }
+        }
+        catch (System.Exception)
+        {
+            // Outline opsiyonel; stil yine uygulanmis sayilir.
         }
     }
 

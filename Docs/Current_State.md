@@ -26,7 +26,7 @@ Yerel asimetrik dodgeball prototipi:
 | Canvas HUD | ✅ | Scale `(0,0,0)` → `(1,1,1)` düzeltildi |
 | Lobby imleç / manuel sayı girişi | ✅ | Cursor lock fix + TMP_InputField |
 | Play kabul | ⏳ | Kullanıcı Play ile teyit etmeli |
-| Windows build smoke | ✅ | `Builds/WindowsSmoke/Yakantop.exe` — Day 7 |
+| Windows build smoke | ✅ | Day 13 rebuild · errors=0 · exe 14s ayakta · NRE yok |
 
 **Tahmini prototip tamamlanma:** ~%70–75 (yerel oynanış)
 
@@ -92,11 +92,10 @@ Yerel asimetrik dodgeball prototipi:
 
 ## Hemen yapılacak doğrulama
 
-1. Unity’de sahneyi kaydet / yeniden aç  
-2. Console Clear → Play  
-3. Lobby → Start → Runner + Saver modelleri görünüyor mu?  
-4. Flash / Shield / Invis + top sesleri  
-5. (Opsiyonel) **Tools → Windows Smoke Build**
+1. Console Clear → Play  
+2. Lobby → Start → modeller + atıcı kombo UI  
+3. Day 13 checklist: `Docs/Day13_Thrower_Smoke.md`  
+4. Smoke rebuild: **Tools → Windows Smoke Build** (veya `Temp/RequestWindowsSmokeBuild`)
 
 ---
 
@@ -111,6 +110,7 @@ Yerel asimetrik dodgeball prototipi:
 | `Docs/Day11_Polish_Smoke.md` | BallData SFX + smoke rebuild |
 | `Docs/Day12_Arena_VFX_Polish.md` | Arena neon + combat VFX |
 | `Docs/Day13_Thrower_Aim_Feedback.md` | Atıcı yörünge / reticle / hedef highlight |
+| `Docs/Day13_Thrower_Smoke.md` | Day 13 Windows smoke + playtest checklist |
 | `Docs/Thrower_Zone_Movement.md` | Atıcı bölge içi hareket |
 | `Docs/Thrower_Combo_Select.md` | Atıcı çift seçim (sarı/yeşil) |
 | `Docs/Script_Structure.md` | Scripts klasör yapısı + ability registry |
