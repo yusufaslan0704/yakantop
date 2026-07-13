@@ -131,6 +131,7 @@ public class ThrowAimPreview : MonoBehaviour
         BallData data = playerThrow != null ? playerThrow.ballData : null;
         float mass = ThrowPhysics.ResolvePrefabMass(data);
 
+        // Sadece ciz; planned path sahiplik PlayerThrow'da (release'te kilitlenir).
         ThrowPathBuilder.Build(
             origin,
             direction,
@@ -144,12 +145,6 @@ public class ThrowAimPreview : MonoBehaviour
             transform,
             maxSteps,
             stepTime);
-
-        // Duz yay (egri-degil toplar) — atis bu izi takip edebilir.
-        if (playerThrow != null)
-        {
-            playerThrow.SetPlannedPath(points, ThrowPhysics.PathSpeedFromForce(force, mass));
-        }
     }
 
     bool IsOwnCollider(Collider col)

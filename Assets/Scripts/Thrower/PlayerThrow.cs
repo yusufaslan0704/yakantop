@@ -71,6 +71,7 @@ public class PlayerThrow : MonoBehaviour
     private float plannedPathSpeed;
 
     readonly List<Vector3> drawnPath = new List<Vector3>(64);
+    readonly List<Vector3> gravityPathScratch = new List<Vector3>(32);
     Vector3 drawTip;
     Vector3 drawOutward;
     float drawnLength;
@@ -88,6 +89,8 @@ public class PlayerThrow : MonoBehaviour
     readonly ThrowerLoadout loadout = new ThrowerLoadout();
     readonly ThrowAimResolver aimResolver = new ThrowAimResolver();
     ThrowReleaseController release;
+    ThrowAnimationBridge animBridge;
+    IThrowerAbility[] abilityCache;
 
     public int SelectedBallIndex => selectedBallIndex;
     public int PrimarySlotIndex => loadout.PrimarySlotIndex;
@@ -133,10 +136,63 @@ public class PlayerThrow : MonoBehaviour
         }
 
         release.Bind(this);
+        animBridge = GetComponent<ThrowAnimationBridge>();
+        if (animBridge == null)
+        {
+            animBridge = gameObject.AddComponent<ThrowAnimationBridge>();
+        }
+
+        RefreshAbilityCache();
 
         EnsureChargeCurve();
         EnsureBallTypes();
         SyncSelectedFromBallData();
+    }
+
+    public void RefreshAbilityCache()
+    {
+        MonoBehaviour[] behaviours = GetComponents<MonoBehaviour>();
+        int count = 0;
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            if (behaviours[i] is IThrowerAbility)
+            {
+                count++;
+            }
+        }
+
+        abilityCache = new IThrowerAbility[count];
+        int write = 0;
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            if (behaviours[i] is IThrowerAbility ability)
+            {
+                abilityCache[write++] = ability;
+            }
+        }
+    }
+
+    public IThrowerAbility FindAbility(ThrowerAbilityId id)
+    {
+        if (id == ThrowerAbilityId.None)
+        {
+            return null;
+        }
+
+        if (abilityCache == null)
+        {
+            RefreshAbilityCache();
+        }
+
+        for (int i = 0; i < abilityCache.Length; i++)
+        {
+            if (abilityCache[i] != null && abilityCache[i].AbilityId == id)
+            {
+                return abilityCache[i];
+            }
+        }
+
+        return null;
     }
 
     void EnsureChargeCurve()
@@ -327,7 +383,7 @@ public class PlayerThrow : MonoBehaviour
         CancelCharge();
         CancelPendingThrow();
         fakeLockUntil = Time.time + Mathf.Max(0.15f, lockDuration);
-        OnThrowStarted?.Invoke();
+        RaiseThrowStarted();
         return true;
     }
 
@@ -438,7 +494,7 @@ public class PlayerThrow : MonoBehaviour
         chargeStartTime = Time.time;
         fullChargeBlipPlayed = false;
         BeginPathDrawIfNeeded();
-        OnChargeStarted?.Invoke();
+        RaiseChargeStarted();
     }
 
     void CancelCharge()
@@ -452,7 +508,7 @@ public class PlayerThrow : MonoBehaviour
         drawingPath = false;
         ClearPlannedPath();
         CameraShake.SetChargeFovPullAll(0f);
-        OnChargeCancelled?.Invoke();
+        RaiseChargeCancelled();
     }
 
     void TickChargeFeel()
@@ -629,21 +685,56 @@ public class PlayerThrow : MonoBehaviour
         float chargePercent = EvaluateCharge(chargeTime);
         lastReleasedChargePercent = chargePercent;
 
-        isCharging = false;
-        CameraShake.SetChargeFovPullAll(0f);
+        float finalForce = ForceFromChargePercent(chargePercent);
+        Vector3 throwDirection = GetThrowDirection();
+        BallData dataToThrow = ResolveThrowBallData();
 
-        // Cizim yolunu atistan once kilitle.
+        // Planned path burada kilitlenir — preview LateUpdate yazmaz.
         if (drawingPath && drawnPath.Count >= 2)
         {
-            float speed = ThrowPhysics.PathSpeedFromForce(
-                ForceFromChargePercent(chargePercent), ResolveThrowBallData());
-            SetPlannedPath(drawnPath, speed);
+            SetPlannedPath(drawnPath, ThrowPhysics.PathSpeedFromForce(finalForce, dataToThrow));
+        }
+        else
+        {
+            LockGravityPlannedPath(finalForce, throwDirection, dataToThrow);
         }
 
+        isCharging = false;
         drawingPath = false;
+        CameraShake.SetChargeFovPullAll(0f);
 
-        float finalForce = ForceFromChargePercent(chargePercent);
-        BeginThrow(ResolveThrowBallData(), GetThrowDirection(), finalForce, rotateToAim: true);
+        BeginThrow(dataToThrow, throwDirection, finalForce, rotateToAim: true);
+    }
+
+    void LockGravityPlannedPath(float force, Vector3 direction, BallData data)
+    {
+        if (!humanFollowsPlannedPath || !IsHumanControlled)
+        {
+            ClearPlannedPath();
+            return;
+        }
+
+        if (throwPoint == null || direction.sqrMagnitude < 0.0001f)
+        {
+            ClearPlannedPath();
+            return;
+        }
+
+        float mass = ThrowPhysics.ResolvePrefabMass(data);
+        Vector3 origin = throwPoint.position + direction * 0.6f;
+        ThrowPathBuilder.Build(
+            origin,
+            direction,
+            force,
+            mass,
+            curveBias: 0f,
+            curveForce: 0f,
+            gravityPathScratch,
+            out _,
+            out _,
+            transform);
+
+        SetPlannedPath(gravityPathScratch, ThrowPhysics.PathSpeedFromForce(force, mass));
     }
 
     float EvaluateCharge(float chargeTime)
@@ -737,9 +828,36 @@ public class PlayerThrow : MonoBehaviour
         RotatePlayerToThrowDirection(throwDirection);
     }
 
-    public void NotifyThrowStarted() => OnThrowStarted?.Invoke();
+    public void NotifyThrowStarted() => RaiseThrowStarted();
     public void NotifyBallThrown() => OnBallThrown?.Invoke();
-    public void NotifyChargeCancelled() => OnChargeCancelled?.Invoke();
+    public void NotifyChargeCancelled() => RaiseChargeCancelled();
+
+    void RaiseThrowStarted()
+    {
+        OnThrowStarted?.Invoke();
+        if (animBridge != null)
+        {
+            animBridge.RaiseThrowStarted();
+        }
+    }
+
+    void RaiseChargeStarted()
+    {
+        OnChargeStarted?.Invoke();
+        if (animBridge != null)
+        {
+            animBridge.RaiseChargeStarted();
+        }
+    }
+
+    void RaiseChargeCancelled()
+    {
+        OnChargeCancelled?.Invoke();
+        if (animBridge != null)
+        {
+            animBridge.RaiseChargeCancelled();
+        }
+    }
 
     public void RecordThrowStats(float force, Vector3 aimPoint)
     {
@@ -786,7 +904,7 @@ public class PlayerThrow : MonoBehaviour
     {
         if (release == null)
         {
-            OnChargeCancelled?.Invoke();
+            RaiseChargeCancelled();
             return;
         }
 

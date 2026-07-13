@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 // Atıcı 8. özellik: runner kamerasından görünmez.
 // Kendi (atici) kamerasında ghost; runner/saver kamerası layer cull ile hiç görmez.
 [DefaultExecutionOrder(41)]
-public class PlayerThrowerInvis : MonoBehaviour
+public class PlayerThrowerInvis : MonoBehaviour, IThrowerAbility
 {
     public const string InvisibleLayerName = "InvisibleToRunner";
 
@@ -18,6 +18,11 @@ public class PlayerThrowerInvis : MonoBehaviour
 
     public bool IsReady => Time.unscaledTime >= nextReadyTime && !IsInvisible;
     public bool IsInvisible { get; private set; }
+
+    public ThrowerAbilityId AbilityId => ThrowerAbilityId.Invis;
+    public bool IsBusy => IsInvisible;
+
+    public float GetCooldownVisual() => GetCooldownPercent();
 
     static int invisibleLayer = -1;
 

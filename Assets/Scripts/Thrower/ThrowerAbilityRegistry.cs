@@ -128,65 +128,24 @@ public static class ThrowerAbilityRegistry
     // 0 = CD'de (bos), 1 = hazir. Aktif durumlar 1'e yakin tutulur.
     public static float GetCooldownVisual(PlayerThrow thrower, ThrowerAbilityId id)
     {
-        if (thrower == null) return 1f;
-
-        switch (id)
-        {
-            case ThrowerAbilityId.AirLift:
-            {
-                PlayerAirLift lift = thrower.GetComponent<PlayerAirLift>();
-                if (lift != null && lift.IsElevated) return 1f;
-                return 1f;
-            }
-            case ThrowerAbilityId.Invis:
-            {
-                PlayerThrowerInvis invis = thrower.GetComponent<PlayerThrowerInvis>();
-                return invis != null ? invis.GetCooldownPercent() : 1f;
-            }
-            case ThrowerAbilityId.Fake:
-            {
-                PlayerThrowFake fake = thrower.GetComponent<PlayerThrowFake>();
-                return fake != null ? fake.GetCooldownPercent() : 1f;
-            }
-            case ThrowerAbilityId.Shadow:
-            {
-                PlayerThrowerShadow shadow = thrower.GetComponent<PlayerThrowerShadow>();
-                return shadow != null ? shadow.GetCooldownPercent() : 1f;
-            }
-            default:
-                return 1f;
-        }
+        IThrowerAbility ability = FindAbility(thrower, id);
+        return ability != null ? ability.GetCooldownVisual() : 1f;
     }
 
     public static bool IsAbilityBusy(PlayerThrow thrower, ThrowerAbilityId id)
     {
-        if (thrower == null) return false;
+        IThrowerAbility ability = FindAbility(thrower, id);
+        return ability != null && ability.IsBusy;
+    }
 
-        switch (id)
+    public static IThrowerAbility FindAbility(PlayerThrow thrower, ThrowerAbilityId id)
+    {
+        if (thrower == null || id == ThrowerAbilityId.None)
         {
-            case ThrowerAbilityId.AirLift:
-            {
-                PlayerAirLift lift = thrower.GetComponent<PlayerAirLift>();
-                return lift != null && lift.IsElevated;
-            }
-            case ThrowerAbilityId.Invis:
-            {
-                PlayerThrowerInvis invis = thrower.GetComponent<PlayerThrowerInvis>();
-                return invis != null && invis.IsInvisible;
-            }
-            case ThrowerAbilityId.Fake:
-            {
-                PlayerThrowFake fake = thrower.GetComponent<PlayerThrowFake>();
-                return fake != null && fake.IsFaking;
-            }
-            case ThrowerAbilityId.Shadow:
-            {
-                PlayerThrowerShadow shadow = thrower.GetComponent<PlayerThrowerShadow>();
-                return shadow != null && shadow.HasShadow;
-            }
-            default:
-                return false;
+            return null;
         }
+
+        return thrower.FindAbility(id);
     }
 
     public static string BuildStatusLine(PlayerThrow thrower)
@@ -256,34 +215,21 @@ public static class ThrowerAbilityRegistry
     {
         if (thrower == null) return;
 
-        if (thrower.GetComponent<PlayerAirLift>() == null)
-        {
-            thrower.AddComponent<PlayerAirLift>();
-        }
+        // Metadata sirasiyla ayni ozel yetenek component'leri.
+        EnsureComponent<PlayerAirLift>(thrower);
+        EnsureComponent<PlayerThrowerInvis>(thrower);
+        EnsureComponent<PlayerThrowFake>(thrower);
+        EnsureComponent<PlayerThrowerShadow>(thrower);
+        EnsureComponent<ThrowAimPreview>(thrower);
+        EnsureComponent<ThrowReleaseController>(thrower);
+        EnsureComponent<ThrowAnimationBridge>(thrower);
+    }
 
-        if (thrower.GetComponent<PlayerThrowerInvis>() == null)
+    static void EnsureComponent<T>(GameObject host) where T : Component
+    {
+        if (host.GetComponent<T>() == null)
         {
-            thrower.AddComponent<PlayerThrowerInvis>();
-        }
-
-        if (thrower.GetComponent<PlayerThrowFake>() == null)
-        {
-            thrower.AddComponent<PlayerThrowFake>();
-        }
-
-        if (thrower.GetComponent<PlayerThrowerShadow>() == null)
-        {
-            thrower.AddComponent<PlayerThrowerShadow>();
-        }
-
-        if (thrower.GetComponent<ThrowAimPreview>() == null)
-        {
-            thrower.AddComponent<ThrowAimPreview>();
-        }
-
-        if (thrower.GetComponent<ThrowReleaseController>() == null)
-        {
-            thrower.AddComponent<ThrowReleaseController>();
+            host.AddComponent<T>();
         }
     }
 }

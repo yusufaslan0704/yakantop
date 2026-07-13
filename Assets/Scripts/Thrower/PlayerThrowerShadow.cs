@@ -3,7 +3,7 @@ using UnityEngine;
 // Atıcı 10. özellik: atıcı bölgesinde blink + eski yerde gölge.
 // Sonraki atışlarda gölge de aynı hedefe çapraz top atar.
 [DefaultExecutionOrder(43)]
-public class PlayerThrowerShadow : MonoBehaviour
+public class PlayerThrowerShadow : MonoBehaviour, IThrowerAbility
 {
     [Header("Blink")]
     public float cooldown = 10f;
@@ -15,6 +15,11 @@ public class PlayerThrowerShadow : MonoBehaviour
 
     public bool IsReady => Time.unscaledTime >= nextReadyTime && activeShadow == null;
     public bool HasShadow => activeShadow != null && activeShadow.IsAlive;
+
+    public ThrowerAbilityId AbilityId => ThrowerAbilityId.Shadow;
+    public bool IsBusy => HasShadow;
+
+    public float GetCooldownVisual() => GetCooldownPercent();
 
     float nextReadyTime;
     ThrowerShadowClone activeShadow;

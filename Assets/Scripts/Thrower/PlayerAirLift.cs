@@ -4,7 +4,7 @@ using UnityEngine;
 // Birakinca sol tik ile her zaman Fast top atar; atistan sonra iner.
 [DefaultExecutionOrder(40)]
 [RequireComponent(typeof(Rigidbody))]
-public class PlayerAirLift : MonoBehaviour
+public class PlayerAirLift : MonoBehaviour, IThrowerAbility
 {
     public enum LiftState
     {
@@ -28,6 +28,15 @@ public class PlayerAirLift : MonoBehaviour
     public bool IsElevated => State == LiftState.Rising || State == LiftState.Hovering || State == LiftState.Descending;
     public bool IsArmedForThrow => State == LiftState.Hovering && armed;
     public bool ForcesFastBall => IsElevated || armed;
+
+    public ThrowerAbilityId AbilityId => ThrowerAbilityId.AirLift;
+    public bool IsBusy => IsElevated;
+
+    public float GetCooldownVisual()
+    {
+        // AirLift'in ayri CD'si yok; elevated iken de dolu goster.
+        return 1f;
+    }
 
     Rigidbody rb;
     PlayerHealth playerHealth;

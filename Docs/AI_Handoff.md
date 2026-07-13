@@ -92,7 +92,7 @@ Yakın sprint sırası **tamamlandı**:
 **Yeni özellik / yeni yetenek / yeni top ekleme yok.**  
 Odak sırası:
 1. Mevcut sistemleri **görsellik · oynanış · hissiyat** (Play ile doğrulanır)
-2. Bu oturumda kullanıcı Play edemediği için: **backend altyapı** (`Docs/Thrower_Infrastructure.md`) — Loadout, Physics, AimResolver, ReleaseController, BallSpawner
+2. Bu oturumda kullanıcı Play edemediği için: **backend altyapı** (`Docs/Thrower_Infrastructure.md`) — Loadout, Physics, AimResolver, ReleaseController, BallSpawner, `IThrowerAbility`, ThrowAnimationBridge, **planned-path sahipliği** ✅
 
 Playtest checklist hâlâ faydalı (`Docs/Day13_Thrower_Smoke.md`) ama hissiyat tweak’leri Play açılınca.
 

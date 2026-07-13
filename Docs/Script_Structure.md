@@ -33,6 +33,8 @@
 | Kombo slot state | `ThrowerLoadout.cs` |
 | Nişan | `ThrowAimResolver.cs` |
 | Release / spawn | `ThrowReleaseController.cs` + `ThrowBallSpawner.cs` |
+| Yetenek runtime | `IThrowerAbility.cs` |
+| Anim köprüsü | `ThrowAnimationBridge.cs` |
 | Detay | `Docs/Thrower_Infrastructure.md` |
 
 ## Not

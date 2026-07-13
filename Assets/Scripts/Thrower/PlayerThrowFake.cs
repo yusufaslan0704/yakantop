@@ -3,7 +3,7 @@ using UnityEngine;
 // Atıcı 9. özellik: sahte atış animasyonu — top çıkmaz, kaçan dodge yakar.
 // Tus: Q / gamepad Y (Triangle).
 [DefaultExecutionOrder(42)]
-public class PlayerThrowFake : MonoBehaviour
+public class PlayerThrowFake : MonoBehaviour, IThrowerAbility
 {
     [Header("Fake")]
     public float cooldown = 7.5f;
@@ -13,6 +13,11 @@ public class PlayerThrowFake : MonoBehaviour
 
     public bool IsReady => Time.unscaledTime >= nextReadyTime && !IsFaking;
     public bool IsFaking { get; private set; }
+
+    public ThrowerAbilityId AbilityId => ThrowerAbilityId.Fake;
+    public bool IsBusy => IsFaking;
+
+    public float GetCooldownVisual() => GetCooldownPercent();
 
     float nextReadyTime;
     float fakeEndTime;

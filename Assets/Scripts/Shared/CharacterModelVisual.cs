@@ -136,9 +136,9 @@ public class CharacterModelVisual : MonoBehaviour
     private float actionEndTime;
     private bool chargeWindupActive;
 
-    private PlayerThrow playerThrow;
     private PlayerDodge playerDodge;
     private PlayerAirLift airLift;
+    private ThrowAnimationBridge throwAnimBridge;
 
     private static Material fallbackMaterial;
 
@@ -149,12 +149,12 @@ public class CharacterModelVisual : MonoBehaviour
         playerEmote = GetComponent<PlayerEmote>();
         playerDash = GetComponent<PlayerDash>();
         playerDuck = GetComponent<PlayerDuck>();
-        playerThrow = GetComponent<PlayerThrow>();
         playerDodge = GetComponent<PlayerDodge>();
         playerMovement = GetComponent<PlayerMovement>();
         inputHandler = GetComponent<PlayerInputHandler>();
         playerRole = GetComponent<PlayerRole>();
         airLift = GetComponent<PlayerAirLift>();
+        throwAnimBridge = GetComponent<ThrowAnimationBridge>();
     }
 
     public void ResetPose()
@@ -176,6 +176,11 @@ public class CharacterModelVisual : MonoBehaviour
 
     void OnEnable()
     {
+        if (throwAnimBridge == null)
+        {
+            throwAnimBridge = GetComponent<ThrowAnimationBridge>();
+        }
+
         if (playerEmote != null)
         {
             playerEmote.OnEmotePlayed += HandleEmote;
@@ -187,11 +192,11 @@ public class CharacterModelVisual : MonoBehaviour
             playerHealth.OnRevived += HandleRevive;
         }
 
-        if (playerThrow != null)
+        if (throwAnimBridge != null)
         {
-            playerThrow.OnThrowStarted += HandleThrow;
-            playerThrow.OnChargeStarted += HandleChargeStarted;
-            playerThrow.OnChargeCancelled += HandleChargeCancelled;
+            throwAnimBridge.OnThrowStarted += HandleThrow;
+            throwAnimBridge.OnChargeStarted += HandleChargeStarted;
+            throwAnimBridge.OnChargeCancelled += HandleChargeCancelled;
         }
 
         if (playerDodge != null)
@@ -213,11 +218,11 @@ public class CharacterModelVisual : MonoBehaviour
             playerHealth.OnRevived -= HandleRevive;
         }
 
-        if (playerThrow != null)
+        if (throwAnimBridge != null)
         {
-            playerThrow.OnThrowStarted -= HandleThrow;
-            playerThrow.OnChargeStarted -= HandleChargeStarted;
-            playerThrow.OnChargeCancelled -= HandleChargeCancelled;
+            throwAnimBridge.OnThrowStarted -= HandleThrow;
+            throwAnimBridge.OnChargeStarted -= HandleChargeStarted;
+            throwAnimBridge.OnChargeCancelled -= HandleChargeCancelled;
         }
 
         if (playerDodge != null)
@@ -1213,9 +1218,9 @@ public class CharacterModelVisual : MonoBehaviour
         float releaseClipTime = clipLength * releaseNorm;
 
         float delay = 0.4f;
-        if (playerThrow != null)
+        if (throwAnimBridge != null)
         {
-            delay = Mathf.Max(0.08f, playerThrow.ballReleaseDelay);
+            delay = throwAnimBridge.BallReleaseDelay;
         }
 
         float speed = releaseClipTime / delay;
@@ -1247,9 +1252,9 @@ public class CharacterModelVisual : MonoBehaviour
 
         float remaining = Mathf.Max(0.04f, releaseClipTime - current);
         float delay = 0.4f;
-        if (playerThrow != null)
+        if (throwAnimBridge != null)
         {
-            delay = Mathf.Max(0.08f, playerThrow.ballReleaseDelay);
+            delay = throwAnimBridge.BallReleaseDelay;
         }
 
         float speed = remaining / delay;
