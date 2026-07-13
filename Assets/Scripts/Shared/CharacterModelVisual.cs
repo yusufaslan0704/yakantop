@@ -62,6 +62,10 @@ public class CharacterModelVisual : MonoBehaviour
     [Range(0.15f, 0.9f)]
     public float throwReleaseNormalizedTime = 0.48f;
 
+    [Tooltip("Charge windup'ta tutulacak poz (0-1). Release'ten once olmali.")]
+    [Range(0.1f, 0.45f)]
+    public float throwWindupHoldNormalizedTime = 0.3f;
+
     [Header("Dodge Visual")]
     [Tooltip("Dodge animasyonunun ekranda kalma suresi (sn). Timing dodge ile kisa tut.")]
     public float dodgeVisualDuration = 0.14f;
@@ -130,6 +134,7 @@ public class CharacterModelVisual : MonoBehaviour
 
     private int activeActionIndex = -1;
     private float actionEndTime;
+    private bool chargeWindupActive;
 
     private PlayerThrow playerThrow;
     private PlayerDodge playerDodge;
@@ -185,6 +190,8 @@ public class CharacterModelVisual : MonoBehaviour
         if (playerThrow != null)
         {
             playerThrow.OnThrowStarted += HandleThrow;
+            playerThrow.OnChargeStarted += HandleChargeStarted;
+            playerThrow.OnChargeCancelled += HandleChargeCancelled;
         }
 
         if (playerDodge != null)
@@ -209,6 +216,8 @@ public class CharacterModelVisual : MonoBehaviour
         if (playerThrow != null)
         {
             playerThrow.OnThrowStarted -= HandleThrow;
+            playerThrow.OnChargeStarted -= HandleChargeStarted;
+            playerThrow.OnChargeCancelled -= HandleChargeCancelled;
         }
 
         if (playerDodge != null)
@@ -840,6 +849,7 @@ public class CharacterModelVisual : MonoBehaviour
     {
         if (!graph.IsValid()) return;
 
+        TickChargeWindup();
         int targetIndex = ChooseState();
 
         UpdateWeights(targetIndex);
@@ -913,6 +923,12 @@ public class CharacterModelVisual : MonoBehaviour
         bool dodging = playerDodge != null && playerDodge.IsDodgeActive;
 
         // Tek seferlik aksiyon (throw/hit/revive/dodge) bitene kadar oncelikli.
+        // Charge windup da throw aksiyonunu tutar.
+        if (chargeWindupActive && throwIndex >= 0)
+        {
+            return throwIndex;
+        }
+
         if (activeActionIndex >= 0)
         {
             if (Time.time >= actionEndTime)
@@ -1060,8 +1076,77 @@ public class CharacterModelVisual : MonoBehaviour
             return;
         }
 
+        if (chargeWindupActive)
+        {
+            chargeWindupActive = false;
+            PlayAction(throwIndex);
+            SyncThrowClipFromWindup();
+            return;
+        }
+
         PlayAction(throwIndex);
         SyncThrowClip();
+    }
+
+    void HandleChargeStarted()
+    {
+        if (throwIndex < 0 || !graph.IsValid())
+        {
+            return;
+        }
+
+        chargeWindupActive = true;
+        activeDance = -1;
+        PlayAction(throwIndex);
+        actionEndTime = Time.time + 120f;
+
+        float clipLength = clips[throwIndex].length;
+        float holdTime = clipLength * Mathf.Clamp(throwWindupHoldNormalizedTime, 0.1f, 0.45f);
+        float approach = Mathf.Max(0.12f, holdTime / 0.28f);
+        approach = Mathf.Clamp(approach, 0.6f, 3.5f);
+        playables[throwIndex].SetTime(0);
+        playables[throwIndex].SetSpeed(approach);
+    }
+
+    void HandleChargeCancelled()
+    {
+        if (!chargeWindupActive && activeActionIndex != throwIndex)
+        {
+            return;
+        }
+
+        chargeWindupActive = false;
+        if (activeActionIndex == throwIndex)
+        {
+            activeActionIndex = -1;
+        }
+
+        if (throwIndex >= 0 && graph.IsValid())
+        {
+            playables[throwIndex].SetSpeed(1f);
+        }
+    }
+
+    void TickChargeWindup()
+    {
+        if (!chargeWindupActive || throwIndex < 0 || !graph.IsValid())
+        {
+            return;
+        }
+
+        float clipLength = clips[throwIndex].length;
+        if (clipLength <= 0.01f)
+        {
+            return;
+        }
+
+        float holdTime = clipLength * Mathf.Clamp(throwWindupHoldNormalizedTime, 0.1f, 0.45f);
+        double t = playables[throwIndex].GetTime();
+        if (t >= holdTime)
+        {
+            playables[throwIndex].SetTime(holdTime);
+            playables[throwIndex].SetSpeed(0f);
+        }
     }
 
     void HandleDodge()
@@ -1071,6 +1156,7 @@ public class CharacterModelVisual : MonoBehaviour
             return;
         }
 
+        chargeWindupActive = false;
         PlayAction(dodgeIndex);
         SyncDodgeClip();
     }
@@ -1140,8 +1226,44 @@ public class CharacterModelVisual : MonoBehaviour
         actionEndTime = Time.time + (clipLength / speed);
     }
 
+    // Windup pozundan release frame'e; top cikisi hala ballReleaseDelay.
+    void SyncThrowClipFromWindup()
+    {
+        if (throwIndex < 0 || !graph.IsValid())
+        {
+            return;
+        }
+
+        float clipLength = clips[throwIndex].length;
+        if (clipLength <= 0.01f)
+        {
+            return;
+        }
+
+        float releaseNorm = Mathf.Clamp(throwReleaseNormalizedTime, 0.15f, 0.9f);
+        float releaseClipTime = clipLength * releaseNorm;
+        float current = (float)playables[throwIndex].GetTime();
+        current = Mathf.Clamp(current, 0f, releaseClipTime);
+
+        float remaining = Mathf.Max(0.04f, releaseClipTime - current);
+        float delay = 0.4f;
+        if (playerThrow != null)
+        {
+            delay = Mathf.Max(0.08f, playerThrow.ballReleaseDelay);
+        }
+
+        float speed = remaining / delay;
+        speed = Mathf.Clamp(speed, 0.6f, 5f);
+
+        playables[throwIndex].SetTime(current);
+        playables[throwIndex].SetSpeed(speed);
+        float remainingClip = Mathf.Max(0.05f, clipLength - current);
+        actionEndTime = Time.time + (remainingClip / speed);
+    }
+
     void HandleHit()
     {
+        chargeWindupActive = false;
         PlayAction(hitIndex);
     }
 

@@ -30,6 +30,8 @@ Yerel asimetrik dodgeball prototipi:
 
 **Tahmini prototip tamamlanma:** ~%70–75 (yerel oynanış)
 
+**Aktif odak:** Yeni özellik yok — mevcut sistemlerde görsellik / oynanış / hissiyat polish (`Docs/AI_Handoff.md`).
+
 ### Asset klasör notu
 - Gerçek modeller: `Assets/Resources/Models/`
 - Boş `Assets/Animations` ve `Assets/Models` klasörleri **silindi**
@@ -66,6 +68,7 @@ Yerel asimetrik dodgeball prototipi:
 - Thrower fake (9): Q ile sahte atış, dodge bait
 - Thrower gölge (10): X ile blink + gölgeden çapraz echo atış
 - Script yapısı: `Core/Arena/Thrower/Runner/Combat/Shared/UI/VFX` + `ThrowerAbilityRegistry`
+- Thrower charge feel: windup hold, charge curve, FOV pull-in, scaled release punch (`Docs/Thrower_Charge_Feel.md`)
 
 ---
 
@@ -113,7 +116,10 @@ Yerel asimetrik dodgeball prototipi:
 | `Docs/Day13_Thrower_Smoke.md` | Day 13 Windows smoke + playtest checklist |
 | `Docs/Thrower_Zone_Movement.md` | Atıcı bölge içi hareket |
 | `Docs/Thrower_Combo_Select.md` | Atıcı çift seçim (sarı/yeşil) |
+| `Docs/Thrower_Charge_Feel.md` | Atıcı charge windup / güç eğrisi / hissiyat |
 | `Docs/Script_Structure.md` | Scripts klasör yapısı + ability registry |
+| `Docs/Thrower_Infrastructure.md` | ThrowPhysics / Loadout ayrıştırması + sonraki dilimler |
 | `Docs/Ball_Select_UI.md` | Atıcı top türü seçim listesi |
 | `Docs/InputSystem_Actions_Note.md` | Input actions bilinçli unused |
 | `Docs/Current_State.md` | Bu dosya — güncel durum |
+| `Docs/AI_Handoff.md` | Başka AI / oturum için durum + sıradaki işler |

@@ -129,10 +129,17 @@ public class ThrowerReticleUI : MonoBehaviour
         float alpha = Mathf.Lerp(0.72f, 1f, charge);
         color.a = alpha;
 
+        bool full = charge >= 0.95f;
+        if (full)
+        {
+            float flash = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 14f);
+            color = Color.Lerp(color, Color.white, 0.35f * flash);
+        }
+
         float gapNow = Mathf.Lerp(gap, gap * 0.45f, charge);
         float armNow = Mathf.Lerp(armLength, armLength * 0.85f, charge);
         float pulse = charge > 0.01f
-            ? 1f + 0.04f * Mathf.Sin(Time.unscaledTime * 10f)
+            ? 1f + (full ? 0.1f : 0.04f) * Mathf.Sin(Time.unscaledTime * (full ? 14f : 10f))
             : 1f;
 
         if (canvasGroup != null)

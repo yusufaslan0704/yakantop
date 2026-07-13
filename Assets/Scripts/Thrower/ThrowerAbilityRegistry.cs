@@ -280,5 +280,10 @@ public static class ThrowerAbilityRegistry
         {
             thrower.AddComponent<ThrowAimPreview>();
         }
+
+        if (thrower.GetComponent<ThrowReleaseController>() == null)
+        {
+            thrower.AddComponent<ThrowReleaseController>();
+        }
     }
 }

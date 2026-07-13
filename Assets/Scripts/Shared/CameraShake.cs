@@ -26,6 +26,7 @@ public class CameraShake : MonoBehaviour
     private float baseFov = 60f;
     private float fovPunchTimer;
     private float fovPunchAmount;
+    private float chargeFovPull;
 
     void Awake()
     {
@@ -90,11 +91,13 @@ public class CameraShake : MonoBehaviour
             return;
         }
 
+        float targetBase = baseFov - chargeFovPull;
+
         if (fovPunchTimer <= 0f)
         {
-            if (!Mathf.Approximately(cam.fieldOfView, baseFov))
+            if (!Mathf.Approximately(cam.fieldOfView, targetBase))
             {
-                cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, baseFov, 14f * Time.unscaledDeltaTime);
+                cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetBase, 14f * Time.unscaledDeltaTime);
             }
 
             return;
@@ -104,7 +107,23 @@ public class CameraShake : MonoBehaviour
         float t = fovPunchDuration > 0f ? 1f - Mathf.Clamp01(fovPunchTimer / fovPunchDuration) : 1f;
         // Hizli acilip yavas kapanan punch.
         float punch = Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI) * fovPunchAmount;
-        cam.fieldOfView = baseFov + punch;
+        cam.fieldOfView = targetBase + punch;
+    }
+
+    public void SetChargeFovPull(float degrees)
+    {
+        chargeFovPull = Mathf.Max(0f, degrees);
+    }
+
+    public static void SetChargeFovPullAll(float degrees)
+    {
+        foreach (CameraShake shake in allInstances)
+        {
+            if (shake != null)
+            {
+                shake.SetChargeFovPull(degrees);
+            }
+        }
     }
 
     public void Shake()

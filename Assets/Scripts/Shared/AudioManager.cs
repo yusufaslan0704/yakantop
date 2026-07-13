@@ -46,6 +46,20 @@ public class AudioManager : MonoBehaviour
         PlaySfx(throwSfx, throwVolume);
     }
 
+    // Full charge hazir blip — ayni clip, daha tiz / kisa.
+    public void PlayThrowChargeReady()
+    {
+        if (audioSource == null || throwSfx == null)
+        {
+            return;
+        }
+
+        float prev = audioSource.pitch;
+        audioSource.pitch = Random.Range(1.18f, 1.32f);
+        audioSource.PlayOneShot(throwSfx, throwVolume * 0.35f);
+        audioSource.pitch = prev;
+    }
+
     public void PlayHit()
     {
         PlaySfx(hitSfx, hitVolume);

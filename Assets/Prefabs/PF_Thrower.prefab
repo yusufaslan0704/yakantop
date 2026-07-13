@@ -221,10 +221,15 @@ MonoBehaviour:
   throwPoint: {fileID: 8942440698897218728}
   playerCamera: {fileID: 0}
   aimDistance: 100
-  minThrowForce: 15
-  maxThrowForce: 40
-  maxChargeTime: 1.2
-  cooldown: 0.5
+  minThrowForce: 16
+  maxThrowForce: 42
+  maxChargeTime: 0.95
+  minChargeTime: 0.1
+  cooldown: 0.42
+  throwShakeDuration: 0.06
+  throwShakeStrength: 0.07
+  throwFovPunch: 2.8
+  chargeFovPull: 3.2
   ballReleaseDelay: 0.38
 --- !u!114 &5304715119677135756
 MonoBehaviour:

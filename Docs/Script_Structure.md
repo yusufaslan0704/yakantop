@@ -1,6 +1,6 @@
 # Script Structure
 
-**Tarih:** 11 Temmuz 2026
+**Tarih:** 11 Temmuz 2026 · güncelleme: 13 Temmuz 2026
 
 `Assets/Scripts/` artık domain klasörlerine ayrıldı. Unity GUID’ler (`.meta`) korundu — prefab referansları bozulmamalı.
 
@@ -24,6 +24,16 @@
 - Yeni yetenek: registry’ye satır + component ekle
 - `PlayerThrow` / `BallSelectUI` slot sayısı otomatik uzar
 - Geriye uyumlu API: `AirLiftModeSelected`, `FakeSlotIndex`, vb. duruyor
+
+## Thrower altyapı parçaları
+
+| Tip | Dosya |
+|-----|-------|
+| Fizik formülleri | `ThrowPhysics.cs` |
+| Kombo slot state | `ThrowerLoadout.cs` |
+| Nişan | `ThrowAimResolver.cs` |
+| Release / spawn | `ThrowReleaseController.cs` + `ThrowBallSpawner.cs` |
+| Detay | `Docs/Thrower_Infrastructure.md` |
 
 ## Not
 Klasör taşıması sonrası Unity’de bir kez reimport / domain reload beklenir.

@@ -18,6 +18,8 @@ public class ThrowChargeUI : MonoBehaviour
     Image barFill;
     TMP_Text labelText;
     float displayedFill;
+    float fullChargeFlash;
+    bool wasNearFull;
     static Sprite whiteSprite;
     bool built;
 
@@ -41,6 +43,8 @@ public class ThrowChargeUI : MonoBehaviour
         {
             SetVisible(false);
             displayedFill = 0f;
+            wasNearFull = false;
+            fullChargeFlash = 0f;
             return;
         }
 
@@ -49,10 +53,34 @@ public class ThrowChargeUI : MonoBehaviour
         float target = playerThrow.GetChargePercent();
         displayedFill = Mathf.MoveTowards(displayedFill, target, 18f * Time.deltaTime);
 
+        if (target >= 0.95f && !wasNearFull)
+        {
+            wasNearFull = true;
+            fullChargeFlash = 1f;
+        }
+        else if (target < 0.9f)
+        {
+            wasNearFull = false;
+        }
+
+        fullChargeFlash = Mathf.MoveTowards(fullChargeFlash, 0f, 3.5f * Time.deltaTime);
+
         if (barFill != null)
         {
             barFill.fillAmount = displayedFill;
-            barFill.color = Color.Lerp(UIColorPalette.ChargeFill, UIColorPalette.ChargeFillHot, displayedFill);
+            Color fill = Color.Lerp(UIColorPalette.ChargeFill, UIColorPalette.ChargeFillHot, displayedFill);
+            if (fullChargeFlash > 0.01f)
+            {
+                fill = Color.Lerp(fill, Color.white, fullChargeFlash * 0.55f);
+            }
+
+            barFill.color = fill;
+        }
+
+        if (chargeBarRoot != null)
+        {
+            float punch = 1f + fullChargeFlash * 0.08f;
+            chargeBarRoot.transform.localScale = new Vector3(punch, punch, 1f);
         }
     }
 

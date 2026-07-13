@@ -18,8 +18,6 @@ public class ThrowAimPreview : MonoBehaviour
 
     PlayerThrow playerThrow;
     PlayerRole playerRole;
-    PlayerInputHandler inputHandler;
-    ThrowerBot throwerBot;
     LineRenderer line;
     Transform impactMarker;
     Transform footRing;
@@ -32,8 +30,6 @@ public class ThrowAimPreview : MonoBehaviour
     {
         playerThrow = GetComponent<PlayerThrow>();
         playerRole = GetComponent<PlayerRole>();
-        inputHandler = GetComponent<PlayerInputHandler>();
-        throwerBot = GetComponent<ThrowerBot>();
         BuildVisuals();
         SetVisible(false);
     }
@@ -107,12 +103,7 @@ public class ThrowAimPreview : MonoBehaviour
 
     bool IsHumanThrower()
     {
-        if (throwerBot != null && throwerBot.enabled)
-        {
-            return false;
-        }
-
-        return inputHandler != null && inputHandler.enabled;
+        return playerThrow != null && playerThrow.IsHumanControlled;
     }
 
     bool ShouldShowArc()
@@ -137,7 +128,8 @@ public class ThrowAimPreview : MonoBehaviour
 
     void SimulateArc(Vector3 origin, Vector3 direction, float force, out Vector3 impact, out bool hasImpact)
     {
-        float mass = ResolveBallMass();
+        BallData data = playerThrow != null ? playerThrow.ballData : null;
+        float mass = ThrowPhysics.ResolvePrefabMass(data);
 
         ThrowPathBuilder.Build(
             origin,
@@ -156,24 +148,8 @@ public class ThrowAimPreview : MonoBehaviour
         // Duz yay (egri-degil toplar) — atis bu izi takip edebilir.
         if (playerThrow != null)
         {
-            playerThrow.SetPlannedPath(points, force / Mathf.Max(0.05f, mass));
+            playerThrow.SetPlannedPath(points, ThrowPhysics.PathSpeedFromForce(force, mass));
         }
-    }
-
-    float ResolveBallMass()
-    {
-        if (playerThrow == null || playerThrow.ballData == null || playerThrow.ballData.prefab == null)
-        {
-            return 1f;
-        }
-
-        Rigidbody rb = playerThrow.ballData.prefab.GetComponent<Rigidbody>();
-        if (rb == null)
-        {
-            return 1f;
-        }
-
-        return Mathf.Max(0.05f, rb.mass);
     }
 
     bool IsOwnCollider(Collider col)
