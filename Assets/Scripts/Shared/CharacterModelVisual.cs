@@ -91,6 +91,14 @@ public class CharacterModelVisual : MonoBehaviour
     public float dashLeanAngle = 22f;
     public float dashLeanSpeed = 18f;
 
+    [Header("Duck Visual")]
+    [Tooltip("Humanoid egilme: one egilme acisi (pancake squash yerine).")]
+    public float duckLeanAngle = 32f;
+    [Tooltip("Egilirken modeli ne kadar asagi kaydir (metre).")]
+    public float duckLowerAmount = 0.42f;
+    [Tooltip("Acik = eski Y squash (kapsul). Kapali = sadece egil+alcal (rigli model).")]
+    public bool duckUseSquashScale = false;
+
     [Header("Ground Check")]
     public float groundCheckDistance = 1.15f;
 
@@ -110,6 +118,7 @@ public class CharacterModelVisual : MonoBehaviour
     public Transform ModelTransform => modelTransform;
     private float currentLean;
     private float duckVisualFactor = 1f;
+    private float currentDuckLean;
 
     private PlayableGraph graph;
     private AnimationMixerPlayable mixer;
@@ -160,6 +169,7 @@ public class CharacterModelVisual : MonoBehaviour
     public void ResetPose()
     {
         currentLean = 0f;
+        currentDuckLean = 0f;
         duckVisualFactor = 1f;
         activeActionIndex = -1;
         activeDance = -1;
@@ -463,19 +473,28 @@ public class CharacterModelVisual : MonoBehaviour
             };
         }
 
+        Material roleTextured = TryBuildRoleTexturedMaterial();
+
         foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>())
         {
             Material mat = renderer.sharedMaterial;
 
-            // Bu FBX'lerde Material yok; Unity default/pembe/seffaf birakabiliyor.
-            // Role modellerinde her zaman opak Lit kullan.
-            bool forceRoleFallback =
-                modelResourcePath == RunnerModelPath ||
-                modelResourcePath == SaverModelPath ||
-                modelResourcePath == ThrowerModelPath;
+            // Gercek texture map varsa koru.
+            if (HasUsableCharacterMaterial(mat))
+            {
+                renderer.enabled = true;
+                continue;
+            }
+
+            // FBX siklikla beyaz/texture'siz gelir — Resources albedo bagla.
+            if (roleTextured != null)
+            {
+                renderer.sharedMaterial = roleTextured;
+                renderer.enabled = true;
+                continue;
+            }
 
             bool needsFallback =
-                forceRoleFallback ||
                 mat == null ||
                 mat.shader == null ||
                 mat.shader.name.Contains("Error") ||
@@ -486,7 +505,7 @@ public class CharacterModelVisual : MonoBehaviour
             if (!needsFallback && mat.HasProperty("_BaseColor"))
             {
                 Color c = mat.GetColor("_BaseColor");
-                if (c.a < 0.05f)
+                if (c.a < 0.05f || (c.r > 0.9f && c.g > 0.9f && c.b > 0.9f))
                 {
                     needsFallback = true;
                 }
@@ -494,12 +513,129 @@ public class CharacterModelVisual : MonoBehaviour
 
             if (!needsFallback)
             {
+                renderer.enabled = true;
                 continue;
             }
 
             renderer.sharedMaterial = fallbackMaterial;
             renderer.enabled = true;
         }
+    }
+
+    Material TryBuildRoleTexturedMaterial()
+    {
+        string albedoPath = null;
+        string emitPath = null;
+        string normalPath = null;
+        string matName = null;
+
+        if (modelResourcePath == RunnerModelPath)
+        {
+            albedoPath = "Models/RunnerTextures/Runner_Albedo";
+            emitPath = "Models/RunnerTextures/Runner_Emit";
+            normalPath = "Models/RunnerTextures/Runner_Normal";
+            matName = "RunnerTexturedLit";
+        }
+        else if (modelResourcePath == SaverModelPath)
+        {
+            albedoPath = "Models/SaverTextures/Saver_Albedo";
+            // Neon Sentinel: tek albedo; soft glow icin ayni map emission.
+            emitPath = "Models/SaverTextures/Saver_Albedo";
+            matName = "SaverTexturedLit";
+        }
+        else if (modelResourcePath == ThrowerModelPath)
+        {
+            albedoPath = "Models/ThrowerTextures/Thrower_Albedo";
+            // Crimson Velocity: tek albedo; soft glow icin ayni map emission.
+            emitPath = "Models/ThrowerTextures/Thrower_Albedo";
+            matName = "ThrowerTexturedLit";
+        }
+        else
+        {
+            return null;
+        }
+
+        Texture2D albedo = Resources.Load<Texture2D>(albedoPath);
+        if (albedo == null)
+        {
+            Debug.LogWarning(name + ": albedo yok (" + albedoPath + ").");
+            return null;
+        }
+
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+        if (shader == null)
+        {
+            return null;
+        }
+
+        Material mat = new Material(shader) { name = matName };
+
+        if (mat.HasProperty("_BaseMap"))
+        {
+            mat.SetTexture("_BaseMap", albedo);
+        }
+
+        if (mat.HasProperty("_MainTex"))
+        {
+            mat.SetTexture("_MainTex", albedo);
+        }
+
+        if (mat.HasProperty("_BaseColor"))
+        {
+            mat.SetColor("_BaseColor", Color.white);
+        }
+
+        mat.color = Color.white;
+
+        if (!string.IsNullOrEmpty(emitPath))
+        {
+            Texture2D emit = Resources.Load<Texture2D>(emitPath);
+            if (emit != null && mat.HasProperty("_EmissionMap"))
+            {
+                mat.EnableKeyword("_EMISSION");
+                mat.SetTexture("_EmissionMap", emit);
+                // Saver/Thrower: albedo=emit ayniysa soft; Runner ayri emit map.
+                Color emitColor =
+                    (modelResourcePath == SaverModelPath || modelResourcePath == ThrowerModelPath)
+                        ? new Color(0.55f, 0.55f, 0.55f, 1f)
+                        : Color.white;
+                mat.SetColor("_EmissionColor", emitColor);
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(normalPath))
+        {
+            Texture2D normal = Resources.Load<Texture2D>(normalPath);
+            if (normal != null && mat.HasProperty("_BumpMap"))
+            {
+                mat.EnableKeyword("_NORMALMAP");
+                mat.SetTexture("_BumpMap", normal);
+            }
+        }
+
+        return mat;
+    }
+
+    static bool HasUsableCharacterMaterial(Material mat)
+    {
+        if (mat == null || mat.shader == null || mat.shader.name.Contains("Error"))
+        {
+            return false;
+        }
+
+        // Beyaz BaseColor yetmez — albedo map sart.
+        if (mat.HasProperty("_BaseMap") && mat.GetTexture("_BaseMap") != null)
+        {
+            return true;
+        }
+
+        if (mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != null)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     static void EnsureAnimatorAvatar(Animator animator, GameObject instance)
@@ -870,6 +1006,7 @@ public class CharacterModelVisual : MonoBehaviour
 
         bool dashing = playerDash != null && playerDash.IsDashing();
         bool ducking = playerDuck != null && playerDuck.IsDucking;
+        bool humanoidDuck = !duckUseSquashScale && HasSkinnedModel();
 
         float targetLean = dashing ? dashLeanAngle : 0f;
         currentLean = Mathf.Lerp(currentLean, targetLean, dashLeanSpeed * Time.deltaTime);
@@ -879,7 +1016,19 @@ public class CharacterModelVisual : MonoBehaviour
             currentLean = 0f;
         }
 
-        float targetDuck = ducking ? playerDuck.duckHeightScale : 1f;
+        float targetDuckLean = (ducking && humanoidDuck) ? duckLeanAngle : 0f;
+        currentDuckLean = Mathf.Lerp(currentDuckLean, targetDuckLean, dashLeanSpeed * Time.deltaTime);
+        if (!ducking && currentDuckLean < 0.5f)
+        {
+            currentDuckLean = 0f;
+        }
+
+        float targetDuck = 1f;
+        if (ducking && !humanoidDuck && playerDuck != null)
+        {
+            targetDuck = playerDuck.duckHeightScale;
+        }
+
         duckVisualFactor = Mathf.Lerp(duckVisualFactor, targetDuck, dashLeanSpeed * Time.deltaTime);
 
         if (!ducking && Mathf.Abs(duckVisualFactor - 1f) < 0.01f)
@@ -887,9 +1036,9 @@ public class CharacterModelVisual : MonoBehaviour
             duckVisualFactor = 1f;
         }
 
-        modelTransform.localRotation = Quaternion.Euler(currentLean, 0f, 0f);
+        modelTransform.localRotation = Quaternion.Euler(currentLean + currentDuckLean, 0f, 0f);
 
-        float duckWidth = 1f + (1f - duckVisualFactor) * 0.2f;
+        float duckWidth = humanoidDuck ? 1f : (1f + (1f - duckVisualFactor) * 0.2f);
         Vector3 dashScale = dashing
             ? new Vector3(0.97f, 0.95f, 1.05f)
             : Vector3.one;
@@ -899,8 +1048,17 @@ public class CharacterModelVisual : MonoBehaviour
             baseModelScale.y * duckVisualFactor * dashScale.y,
             baseModelScale.z * duckWidth * dashScale.z);
 
-        float yPos = modelYOffset - (1f - duckVisualFactor) * 0.45f;
+        float lower = humanoidDuck
+            ? (currentDuckLean / Mathf.Max(1f, duckLeanAngle)) * duckLowerAmount
+            : (1f - duckVisualFactor) * 0.45f;
+        float yPos = modelYOffset - lower;
         modelTransform.localPosition = new Vector3(0f, yPos, 0f);
+    }
+
+    bool HasSkinnedModel()
+    {
+        return modelTransform != null &&
+               modelTransform.GetComponentInChildren<SkinnedMeshRenderer>() != null;
     }
 
     int ChooseState()

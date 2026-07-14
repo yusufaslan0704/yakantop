@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 2705793618034906912}
   - component: {fileID: 4930891129605682611}
   - component: {fileID: 5679637016894860655}
+  - component: {fileID: 8800112200418967}
   m_Layer: 0
   m_Name: PF_Ball_Fast
   m_TagString: Untagged
@@ -156,12 +157,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Ball
   lifeTime: 5
   hitEffectPrefab: {fileID: 3637294896099317143, guid: b23bcda5df9ac8f4aa52b34e25998991, type: 3}
-  environmentHitShakeDuration: 0.12
-  environmentHitShakeStrength: 0.12
-  playerHitShakeDuration: 0.18
-  playerHitShakeStrength: 0.22
-  knockbackForce: 3
-  hitStopDuration: 0.05
+  environmentHitShakeDuration: 0.1
+  environmentHitShakeStrength: 0.1
+  playerHitShakeDuration: 0.1
+  playerHitShakeStrength: 0.2
+  knockbackForce: 3.5
+  hitStopDuration: 0.045
 --- !u!96 &5679637016894860655
 TrailRenderer:
   serializedVersion: 4
@@ -211,11 +212,11 @@ TrailRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Time: 0.25
+  m_Time: 0.45
   m_PreviewTimeScale: 1
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.18
+    widthMultiplier: 0.1
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -272,3 +273,27 @@ TrailRenderer:
   m_Autodestruct: 0
   m_Emitting: 1
   m_ApplyActiveColorSpace: 1
+--- !u!114 &8800112200418967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 289847871389453925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c4e9a2b8f1d4e6a9b0c3d5e7f8a1b2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BallVisualIdentity
+  visualScale: 0.85
+  scaleFromThrowSpeed: 1
+  customMeshResourcePath: Models/Balls/BallFast
+  customAlbedoResourcePath: Models/Balls/BallFast_Albedo
+  softEmissionFromAlbedo: 1
+  emissionStrength: 0.55
+  trailTime: 0.45
+  trailWidth: 0.1
+  equatorRing: 0
+  ringColor: {r: 1, g: 0.52, b: 0.14, a: 1}
+  ringScale: 1.12
+  ringThickness: 0.035

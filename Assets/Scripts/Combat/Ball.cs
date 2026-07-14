@@ -260,6 +260,12 @@ public class Ball : MonoBehaviour
     {
         data = newData;
         remainingBounces = data != null ? data.maxBounces : 0;
+
+        BallVisualIdentity visual = GetComponent<BallVisualIdentity>();
+        if (visual != null)
+        {
+            visual.NotifyBallData(data);
+        }
     }
 
     // -1 = sola, +1 = saga. |deger| kivrim siddeti. Insan aticida mouse/stick ile set edilir.
@@ -297,7 +303,9 @@ public class Ball : MonoBehaviour
             hitNormal = collision.contacts[0].normal;
         }
 
-        Color ballColor = CombatVfx.ReadBallColor(gameObject, Color.white);
+        Color ballColor = data != null
+            ? UIColorPalette.ColorForBall(data)
+            : CombatVfx.ReadBallColor(gameObject, Color.white);
         PlayHitSound();
 
         // Decoy silueti: oyuncu degil — elenmez, revive edilemez; sadece flash patlar.

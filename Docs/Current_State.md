@@ -69,6 +69,7 @@ Yerel asimetrik dodgeball prototipi:
 - Thrower gölge (10): X ile blink + gölgeden çapraz echo atış
 - Script yapısı: `Core/Arena/Thrower/Runner/Combat/Shared/UI/VFX` + `ThrowerAbilityRegistry`
 - Thrower charge feel: windup hold, charge curve, FOV pull-in, scaled release punch (`Docs/Thrower_Charge_Feel.md`)
+- Ball visual identity: 6 top kimlik (renk/ölçek/trail/UI) — `Docs/Ball_Visual_Identity.md`
 
 ---
 
@@ -120,6 +121,7 @@ Yerel asimetrik dodgeball prototipi:
 | `Docs/Script_Structure.md` | Scripts klasör yapısı + ability registry |
 | `Docs/Thrower_Infrastructure.md` | ThrowPhysics / Loadout ayrıştırması + sonraki dilimler |
 | `Docs/Ball_Select_UI.md` | Atıcı top türü seçim listesi |
+| `Docs/Ball_Visual_Identity.md` | 6 top görsel kimlik (renk/ölçek/trail) |
 | `Docs/InputSystem_Actions_Note.md` | Input actions bilinçli unused |
 | `Docs/Current_State.md` | Bu dosya — güncel durum |
 | `Docs/AI_Handoff.md` | Başka AI / oturum için durum + sıradaki işler |

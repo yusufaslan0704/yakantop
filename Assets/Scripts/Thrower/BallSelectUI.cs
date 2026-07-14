@@ -520,17 +520,7 @@ public class BallSelectUI : MonoBehaviour
         return full;
     }
 
-    static Color ColorForBall(BallData data)
-    {
-        if (data == null) return UIColorPalette.Muted;
-        string n = data.ballName != null ? data.ballName.ToLowerInvariant() : "";
-        if (n.Contains("fast")) return new Color(0.35f, 0.95f, 1f, 1f);
-        if (n.Contains("heavy")) return new Color(0.95f, 0.45f, 0.35f, 1f);
-        if (n.Contains("sek") || n.Contains("bounc")) return new Color(0.45f, 0.95f, 0.55f, 1f);
-        if (n.Contains("egri") || n.Contains("curve")) return new Color(0.85f, 0.55f, 1f, 1f);
-        if (n.Contains("ayna") || n.Contains("mirror")) return new Color(0.55f, 0.92f, 1f, 1f);
-        return UIColorPalette.Accent;
-    }
+    static Color ColorForBall(BallData data) => UIColorPalette.ColorForBall(data);
 
     void SetVisible(bool visible)
     {

@@ -38,7 +38,8 @@ public static class ThrowBallSpawner
         GameObject ball = Object.Instantiate(request.Data.prefab, spawnPosition, Quaternion.identity);
         SceneFolders.ParentTo(ball.transform, SceneFolders.RuntimeSpawned);
 
-        Color trailColor = CombatVfx.ReadBallColor(ball, Color.white);
+        // BallData kimlik rengi (Fast sari vb.); textured mesh BaseColor beyaz olabilir.
+        Color trailColor = UIColorPalette.ColorForBall(request.Data);
         CombatVfx.TintBallTrail(ball, trailColor);
 
         Ball ballScript = ball.GetComponent<Ball>();

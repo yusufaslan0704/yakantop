@@ -34,4 +34,29 @@ public static class UIColorPalette
 
     public static readonly Color StartButton = new Color(0.15f, 0.55f, 0.35f, 1f);
     public static readonly Color StartButtonHover = new Color(0.2f, 0.7f, 0.45f, 1f);
+
+    // Top gorsel kimlik — UI slot + dokuman tek kaynak (fizik degismez).
+    public static readonly Color BallNormal = new Color(0.88f, 0.94f, 0.98f, 1f);
+    public static readonly Color BallFast = new Color(1f, 0.88f, 0.18f, 1f);
+    public static readonly Color BallHeavy = new Color(0.42f, 0.18f, 0.72f, 1f);
+    public static readonly Color BallBouncy = new Color(0.28f, 0.92f, 0.4f, 1f);
+    public static readonly Color BallCurve = new Color(1f, 0.52f, 0.14f, 1f);
+    public static readonly Color BallMirror = new Color(0.62f, 0.9f, 0.98f, 1f);
+
+    public static Color ColorForBall(BallData data)
+    {
+        if (data == null)
+        {
+            return Muted;
+        }
+
+        string n = data.ballName != null ? data.ballName.ToLowerInvariant() : "";
+        if (n.Contains("fast")) return BallFast;
+        if (n.Contains("heavy")) return BallHeavy;
+        if (n.Contains("sek") || n.Contains("bounc")) return BallBouncy;
+        if (n.Contains("egri") || n.Contains("curve")) return BallCurve;
+        if (n.Contains("ayna") || n.Contains("mirror")) return BallMirror;
+        if (n.Contains("normal")) return BallNormal;
+        return Accent;
+    }
 }

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 2705793618034906912}
   - component: {fileID: 4930891129605682611}
   - component: {fileID: 5679637016894860655}
+  - component: {fileID: 8800112201316384}
   m_Layer: 0
   m_Name: PF_Ball_Heavy
   m_TagString: Untagged
@@ -211,11 +212,11 @@ TrailRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Time: 0.25
+  m_Time: 0.15
   m_PreviewTimeScale: 1
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.25
+    widthMultiplier: 0.35
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -272,3 +273,23 @@ TrailRenderer:
   m_Autodestruct: 0
   m_Emitting: 1
   m_ApplyActiveColorSpace: 1
+--- !u!114 &8800112201316384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 289847871389453925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c4e9a2b8f1d4e6a9b0c3d5e7f8a1b2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BallVisualIdentity
+  visualScale: 1.25
+  scaleFromThrowSpeed: 1
+  trailTime: 0.15
+  trailWidth: 0.35
+  equatorRing: 0
+  ringColor: {r: 1, g: 0.52, b: 0.14, a: 1}
+  ringScale: 1.12
+  ringThickness: 0.035
